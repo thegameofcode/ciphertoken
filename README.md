@@ -48,8 +48,8 @@ function newUser(callback){
   db.save(user,callback);
 }
 
-function createUserAccess(callback){
-  db.get({id:1},function(err,userDb){
+function createUserAccess(userId,callback){
+  db.get({id:userId},function(err,userDb){
     callback(err,{accessToken : cToken.createAccessToken(userDb.id,new Date().getTime()) );
   });
 }
@@ -57,6 +57,15 @@ function createUserAccess(callback){
 function getUserIdByAccessToken(accessToken){
   var accessTokenSet = cToken.getAccessTokenSet(accessToken);
   return accessTokenSet[0]; // userId
+}
+
+function renewAccessTokenIfExpired(accessToken){
+  if ( cToken.checkAccessTokenExpiration(accessToken) ){
+    return accessToken; 
+  }
+  else {
+    return cToken.createAccessToken(getUserIdByAccessToken(accessToken),new Date().getTime())
+  }
 }
 
 ```
