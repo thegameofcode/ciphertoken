@@ -1,4 +1,4 @@
-ciphertoken
+cipherToken
 ===========
 
 A method to create ciphered accessToken based on the following principles:
