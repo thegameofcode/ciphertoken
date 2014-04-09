@@ -62,34 +62,16 @@ describe('# accessToken', function() {
 		var accessTokenSet = cToken.getAccessTokenSet(accessToken);
 		debug('accessToken get a set ok', accessTokenSet);
 		assert.notEqual(accessTokenSet,null);
-		assert.equal(accessTokenSet.length,3);
-		assert.equal(accessTokenSet[0],VALID_USER_ID);
-		assert.equal(accessTokenSet[1],timestamp);
-		assert.notEqual(accessTokenSet[2],null);
-	});
-/*
-	it('accessToken check correct firm', function() {
-		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY);
-		var refreshToken = cToken.createRefreshToken();
-		var accessToken = cToken.createAccessToken(refreshToken,VALID_USER_ID,new Date().getTime());
-		debug('accessToken check correct firm', accessToken);
-		assert.equal( cToken.checkAccessTokenFirm( refreshToken, accessToken ), true );
+		assert.equal(accessTokenSet.consummerId,VALID_USER_ID);
+		assert.equal(accessTokenSet.timestamp,timestamp);
 	});
 
-	it('accessToken check incorrect firm', function() {
-		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY);
-		var refreshToken = cToken.createRefreshToken();
-		var accessToken = cToken.createAccessToken(refreshToken,VALID_USER_ID,new Date().getTime());
-		debug('accessToken check incorrect firm', accessToken);
-		assert.equal( cToken.checkAccessTokenFirm( 'invalid_refreshToken', accessToken ), false );
-	});
-*/
 	it('accessToken check correct timestamp', function() {
 		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY);
 		var refreshToken = cToken.createRefreshToken();
 		var accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime());
 		debug('accessToken check correct timestamp', accessToken);
-		assert.equal( cToken.checkAccessTokenExpiration( accessToken ), true );
+		assert.equal( cToken.getAccessTokenExpiration( accessToken ).expired, false );
 	});
 
 	it('accessToken check incorrect timestamp', function() {
@@ -97,7 +79,7 @@ describe('# accessToken', function() {
 		var refreshToken = cToken.createRefreshToken();
 		var accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime()-999999);
 		debug('accessToken check incorrect timestamp', accessToken);
-		assert.equal( cToken.checkAccessTokenExpiration( accessToken ), true );
+		assert.equal( cToken.getAccessTokenExpiration( accessToken ).expired, false );
 	});
 
 /**

@@ -6,14 +6,16 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 
 	function CipherToken(){ }
 
-	//
-	// Private
-	//
 	var _ERRORS = {
 		cipherkey_required : { err:'cipherkey_required',des:'cipherKey parameter is mandatory' },
 		firmkey_required : { err:'firmkey_required',des:'firmKey parameter is mandatory' },
+		bad_firm : { err:'bad_firm',des:'firm is not valid' },
 		accesstoken_expiration_required : { err:'accesstoken_expiration_required',des:'accesstoken expiration value must be a positive integer' }
 	}
+
+	//
+	// Mandatory parameters
+	//
 
 	if(!cipherKey) throw _ERRORS.cipherkey_required;
 	function getCipherKey (){
@@ -25,6 +27,10 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 		return firmKey;
 	}
 
+	//
+	// Options
+	//
+
 	var settings = {
 		algorythm : 'aes-256-cbc',
 		accessTokenExpirationMinutes : 90
@@ -33,6 +39,11 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 	for ( var p in options ){
 		settings[p] = options[p];
 	}
+
+
+	//
+	// Private methods
+	//
 
 	function firmAccessToken (consumerId, timestamp){
 		return crypto.createHmac('md5',getFirmKey()).update(consumerId+timestamp).digest('hex');
@@ -83,13 +94,20 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 	}
 
 	CipherToken.prototype.getAccessTokenSet = function (accessToken){
-		checkAccessTokenFirm(accessToken);
-		return decipherAccessToken(accessToken);
+		var token = decipherAccessToken(accessToken);
+		var tokenSet = { consummerId : token[0], timestamp : token[1] };
+		if ( !checkAccessTokenFirm(accessToken) ) {
+			tokenSet.err = _ERRORS.bad_firm;
+		}
+		return tokenSet;
 	}
 
-	CipherToken.prototype.checkAccessTokenExpiration = function (accessToken){
-		checkAccessTokenFirm(accessToken);
-		return checkAccessTokenExpiration(accessToken);
+	CipherToken.prototype.getAccessTokenExpiration = function (accessToken){
+		var result = { expired : !checkAccessTokenExpiration(accessToken) };
+		if ( !checkAccessTokenFirm(accessToken) ) {
+			result.err = _ERRORS.bad_firm;
+		}
+		return result;
 	}
 
 	return new CipherToken();
