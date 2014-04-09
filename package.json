@@ -2,6 +2,7 @@
   "name": "ciphertoken",
   "version": "0.0.1",
   "description": "Ciphered accessToken management",
+  "main": "src/ciphertoken.js",
   "scripts": {
     "test": "DEBUG=ciphertoken* mocha src/test/*"
   },
