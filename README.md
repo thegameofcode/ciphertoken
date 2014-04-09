@@ -43,8 +43,7 @@ var FIRM_KEY = 'MyFirmKey123'
 var cToken = ciphertoken.create(CIPHER_KEY,FIRM_KEY);
 
 function newUser(callback){
-  var refreshToken = cToken.refreshToken();
-  var user = { id:1, refTkn:refreshToken };
+  var user = { id:1, refreshToken:cToken.refreshToken() };
   db.save(user,callback);
 }
 
