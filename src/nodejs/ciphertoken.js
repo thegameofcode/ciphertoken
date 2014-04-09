@@ -10,7 +10,7 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 		cipherkey_required : { err:'cipherkey_required',des:'cipherKey parameter is mandatory' },
 		firmkey_required : { err:'firmkey_required',des:'firmKey parameter is mandatory' },
 		bad_firm : { err:'bad_firm',des:'firm is not valid' },
-		accesstoken_expiration_required : { err:'accesstoken_expiration_required',des:'accesstoken expiration value must be a positive integer' }
+		accesstoken_expired : { err:'accesstoken_expired',des:'accesstoken has expired it must be renewed' }
 	}
 
 	//
@@ -66,10 +66,9 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 		return (firmAccessToken(accessTokenSet[0], accessTokenSet[1]) === accessTokenSet[2]);
 	}
 
-	function checkAccessTokenExpiration(accessToken){
-		if(!settings.accessTokenExpirationMinutes) throw _ERRORS.accesstoken_expiration_required;
+	function hasAccessTokenExpired(accessToken){
 		var accessTokenSet = decipherAccessToken(accessToken);
-		return ((new Date().getTime()-accessTokenSet[1]) < settings.accessTokenExpirationMinutes*60*1000);
+		return ((new Date().getTime()-accessTokenSet[1]) > settings.accessTokenExpirationMinutes*60*1000);
 	}
 
 	function standarizeToken(token){
@@ -81,8 +80,10 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 	}
 
 	//
-	// Public methods
+	// Public members
 	//
+
+	CipherToken.prototype.ERRORS = _ERRORS;
 
 	CipherToken.prototype.createRefreshToken = function (){
 		return standarizeToken( crypto.randomBytes(100).toString('base64') );
@@ -99,11 +100,14 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 		if ( !checkAccessTokenFirm(accessToken) ) {
 			tokenSet.err = _ERRORS.bad_firm;
 		}
+		else if ( hasAccessTokenExpired(accessToken) ) {
+			tokenSet.err = _ERRORS.accesstoken_expired;
+		}
 		return tokenSet;
 	}
 
 	CipherToken.prototype.getAccessTokenExpiration = function (accessToken){
-		var result = { expired : !checkAccessTokenExpiration(accessToken) };
+		var result = { expired : hasAccessTokenExpired(accessToken) };
 		if ( !checkAccessTokenFirm(accessToken) ) {
 			result.err = _ERRORS.bad_firm;
 		}
