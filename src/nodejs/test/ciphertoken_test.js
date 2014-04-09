@@ -5,13 +5,13 @@ var assert = require('assert');
 var ciphertoken = require('../ciphertoken');
 
 var VALID_CIPHER_KEY = 'myCipherKey123';
-var VALID_HMAC_KEY 	 = 'myHmacKey123';
+var VALID_FIRM_KEY 	 = 'myFirmKey123';
 var VALID_USER_ID 	 = 'myUserId123';
 
 describe('# Creation', function() {
 
 	it('CipherToken creation ok', function() {
-		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_HMAC_KEY);
+		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY);
 		assert.notEqual(cToken,null);
 	});
 
@@ -40,7 +40,7 @@ describe('# Creation', function() {
 describe('# refreshToken', function() {
 
 	it('refreshToken creation ok', function() {
-		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_HMAC_KEY);
+		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY);
 		assert.notEqual(cToken.createRefreshToken(),null);
 	});
 
@@ -49,19 +49,17 @@ describe('# refreshToken', function() {
 describe('# accessToken', function() {
 
 	it('accessToken creation ok', function() {
-		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_HMAC_KEY);
-		var refreshToken = cToken.createRefreshToken();
-		var accessToken = cToken.createAccessToken(refreshToken,VALID_USER_ID,new Date().getTime());
+		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY);
+		var accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime());
 		debug('accessToken creation ok', accessToken);
 		assert.notEqual(accessToken,null);
 	});
 
 	it('accessToken get a set ok', function() {
-		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_HMAC_KEY);
-		var refreshToken = cToken.createRefreshToken();
+		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY);
 		var timestamp = new Date().getTime();
-		var accessToken = cToken.createAccessToken(refreshToken,VALID_USER_ID,timestamp);
-		var accessTokenSet = cToken.getAccessTokenSet(refreshToken,accessToken);
+		var accessToken = cToken.createAccessToken(VALID_USER_ID,timestamp);
+		var accessTokenSet = cToken.getAccessTokenSet(accessToken);
 		debug('accessToken get a set ok', accessTokenSet);
 		assert.notEqual(accessTokenSet,null);
 		assert.equal(accessTokenSet.length,3);
@@ -69,9 +67,9 @@ describe('# accessToken', function() {
 		assert.equal(accessTokenSet[1],timestamp);
 		assert.notEqual(accessTokenSet[2],null);
 	});
-
+/*
 	it('accessToken check correct firm', function() {
-		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_HMAC_KEY);
+		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY);
 		var refreshToken = cToken.createRefreshToken();
 		var accessToken = cToken.createAccessToken(refreshToken,VALID_USER_ID,new Date().getTime());
 		debug('accessToken check correct firm', accessToken);
@@ -79,25 +77,25 @@ describe('# accessToken', function() {
 	});
 
 	it('accessToken check incorrect firm', function() {
-		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_HMAC_KEY);
+		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY);
 		var refreshToken = cToken.createRefreshToken();
 		var accessToken = cToken.createAccessToken(refreshToken,VALID_USER_ID,new Date().getTime());
 		debug('accessToken check incorrect firm', accessToken);
 		assert.equal( cToken.checkAccessTokenFirm( 'invalid_refreshToken', accessToken ), false );
 	});
-
+*/
 	it('accessToken check correct timestamp', function() {
-		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_HMAC_KEY);
+		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY);
 		var refreshToken = cToken.createRefreshToken();
-		var accessToken = cToken.createAccessToken(refreshToken,VALID_USER_ID,new Date().getTime());
+		var accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime());
 		debug('accessToken check correct timestamp', accessToken);
 		assert.equal( cToken.checkAccessTokenExpiration( accessToken ), true );
 	});
 
 	it('accessToken check incorrect timestamp', function() {
-		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_HMAC_KEY);
+		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY);
 		var refreshToken = cToken.createRefreshToken();
-		var accessToken = cToken.createAccessToken(refreshToken,VALID_USER_ID,new Date().getTime()-999999);
+		var accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime()-999999);
 		debug('accessToken check incorrect timestamp', accessToken);
 		assert.equal( cToken.checkAccessTokenExpiration( accessToken ), true );
 	});
