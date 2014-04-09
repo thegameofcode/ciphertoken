@@ -1,7 +1,7 @@
 var debug = require('debug')('ciphertoken');
 var crypto = require('crypto');
 
-var CreateCipherToken = function (cipherKey, hmacKey, options){
+var CreateCipherToken = function (cipherKey, firmKey, options){
 	'use strict';
 
 	function CipherToken(){ }
@@ -11,7 +11,7 @@ var CreateCipherToken = function (cipherKey, hmacKey, options){
 	//
 	var _ERRORS = {
 		cipherkey_required : { err:'cipherkey_required',des:'cipherKey parameter is mandatory' },
-		hmackey_required : { err:'hmackey_required',des:'hmacKey parameter is mandatory' },
+		firmkey_required : { err:'firmkey_required',des:'firmKey parameter is mandatory' },
 		accesstoken_expiration_required : { err:'accesstoken_expiration_required',des:'accesstoken expiration value must be a positive integer' }
 	}
 
@@ -20,9 +20,9 @@ var CreateCipherToken = function (cipherKey, hmacKey, options){
 		return cipherKey;
 	}
 
-	if(!hmacKey) throw _ERRORS.hmackey_required;
-	function getHmacKey (){
-		return hmacKey;
+	if(!firmKey) throw _ERRORS.firmkey_required;
+	function getFirmKey (){
+		return firmKey;
 	}
 
 	var settings = {
@@ -35,7 +35,7 @@ var CreateCipherToken = function (cipherKey, hmacKey, options){
 	}
 
 	function firmAccessToken (consumerId, timestamp){
-		return crypto.createHmac('md5',getHmacKey()).update(consumerId+timestamp).digest('hex');
+		return crypto.createHmac('md5',getFirmKey()).update(consumerId+timestamp).digest('hex');
 	}
 
 	function cipherAccessTokenSet(accessTokenSet){
