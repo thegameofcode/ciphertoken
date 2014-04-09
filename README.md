@@ -30,7 +30,7 @@ var cToken = ciphertoken.create(CIPHER_KEY,FIRM_KEY[,options]);
 ### Methods
 - __createRefreshToken()__ : returns a randomBytes encodes to the RFC 4648 Spec
 - __createAccessToken(CONSUMMER_ID,TIMESTAMP)__ : returns a ciphered and firmed accessToken
-- __getAccessTokenSet(ACCESS_TOKEN[,force])__ : returns an array with the consumerId and timestamp, this method check the firm authenticity and the timestamp expiration (90 minutes by default), force can be used to return the accessToken in any case
+- __getAccessTokenSet(ACCESS_TOKEN)__ : returns an array with the consumerId and timestamp, this method check the firm authenticity and the timestamp expiration (90 minutes by default), force can be used to return the accessToken in any case
 - __getAccessTokenExpiration(ACCESS_TOKEN)__ : returns an object with property 'expired'. This property is true when timestamp is expired and false when is valid. Although, returns 'err' property if the firm fails.
 
 
