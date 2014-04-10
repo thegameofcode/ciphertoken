@@ -91,6 +91,7 @@ debug('checkAccessTokenFirm', accessTokenSet, firmAccessToken(accessTokenSet[0],
 	}
 
 	CipherToken.prototype.createAccessToken = function (consumerId,timestamp){
+		if(!timestamp) timestamp = new Date().getTime();
 		var accessTokenSet = [consumerId,timestamp,firmAccessToken(consumerId, timestamp)];
 		return cipherAccessTokenSet(accessTokenSet);
 	}
