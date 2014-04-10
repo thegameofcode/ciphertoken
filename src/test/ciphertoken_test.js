@@ -8,6 +8,8 @@ var VALID_CIPHER_KEY = 'myCipherKey123';
 var VALID_FIRM_KEY 	 = 'myFirmKey123';
 var VALID_USER_ID 	 = 'myUserId123';
 
+var INVALID_FIRM_KEY = 'myFirmKey12345';
+
 describe('# Creation', function() {
 
 	it('CipherToken creation ok', function() {
@@ -80,6 +82,26 @@ describe('# accessToken', function() {
 		var accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime()-999999);
 		debug('accessToken check incorrect timestamp', accessToken);
 		assert.equal( cToken.getAccessTokenExpiration( accessToken ).expired, false );
+	});
+
+	it('accessToken check correct firm', function() {
+		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY);
+		var refreshToken = cToken.createRefreshToken();
+		var accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime());
+		debug('accessToken check correct firm', accessToken);
+		assert.equal( cToken.checkAccessTokenFirm( accessToken ), true );
+	});
+
+	it('accessToken check incorrect firm', function() {
+		var cToken1 = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY);
+		var accessToken1 = cToken1.createAccessToken(VALID_USER_ID,new Date().getTime());
+
+		var cToken2 = ciphertoken.create(VALID_CIPHER_KEY,INVALID_FIRM_KEY);
+		var accessToken2 = cToken2.createAccessToken(VALID_USER_ID,new Date().getTime());
+
+		assert.equal( cToken1.checkAccessTokenFirm( accessToken2 ), false );
+		assert.equal( cToken2.checkAccessTokenFirm( accessToken1 ), false );
+
 	});
 
 /**

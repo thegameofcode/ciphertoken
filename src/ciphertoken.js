@@ -63,6 +63,7 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 
 	function checkAccessTokenFirm(accessToken){
 		var accessTokenSet = decipherAccessToken(accessToken);
+debug('checkAccessTokenFirm', accessTokenSet, firmAccessToken(accessTokenSet[0], accessTokenSet[1]));
 		return (firmAccessToken(accessTokenSet[0], accessTokenSet[1]) === accessTokenSet[2]);
 	}
 
@@ -92,6 +93,10 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 	CipherToken.prototype.createAccessToken = function (consumerId,timestamp){
 		var accessTokenSet = [consumerId,timestamp,firmAccessToken(consumerId, timestamp)];
 		return cipherAccessTokenSet(accessTokenSet);
+	}
+
+	CipherToken.prototype.checkAccessTokenFirm = function (accessToken){
+		return checkAccessTokenFirm(accessToken);
 	}
 
 	CipherToken.prototype.getAccessTokenSet = function (accessToken){
