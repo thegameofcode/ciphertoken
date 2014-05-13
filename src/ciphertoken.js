@@ -10,6 +10,7 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 		cipherkey_required : { err:'cipherkey_required',des:'cipherKey parameter is mandatory' },
 		firmkey_required : { err:'firmkey_required',des:'firmKey parameter is mandatory' },
 		bad_firm : { err:'bad_firm',des:'firm is not valid' },
+		bad_accesstoken : { err:'bad_accesstoken', des:'accesstoken is not valid' },
 		accesstoken_expired : { err:'accesstoken_expired',des:'accesstoken has expired it must be renewed' }
 	}
 
@@ -58,12 +59,13 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 	function decipherAccessToken (accessToken){
 		var decipher = crypto.createDecipher( settings.algorythm, getCipherKey() );
 		var data = decipher.update(accessToken, 'base64', 'utf8');
-		return (data+decipher.final('utf8')).split('__');
+		if ( !data ) return null;
+		return ( data + decipher.final('utf8') ).split('__');
 	}
 
 	function checkAccessTokenFirm(accessToken){
 		var accessTokenSet = decipherAccessToken(accessToken);
-debug('checkAccessTokenFirm', accessTokenSet, firmAccessToken(accessTokenSet[0], accessTokenSet[1]));
+		//debug('checkAccessTokenFirm', accessTokenSet, firmAccessToken(accessTokenSet[0], accessTokenSet[1]));
 		return (firmAccessToken(accessTokenSet[0], accessTokenSet[1]) === accessTokenSet[2]);
 	}
 
@@ -101,13 +103,19 @@ debug('checkAccessTokenFirm', accessTokenSet, firmAccessToken(accessTokenSet[0],
 	}
 
 	CipherToken.prototype.getAccessTokenSet = function (accessToken){
+		var tokenSet = {};
 		var token = decipherAccessToken(accessToken);
-		var tokenSet = { consummerId : token[0], timestamp : token[1] };
-		if ( !checkAccessTokenFirm(accessToken) ) {
+		if ( !token ) {
+			tokenSet.err = _ERRORS.bad_accesstoken;
+		}
+		else if ( !checkAccessTokenFirm(accessToken) ) {
 			tokenSet.err = _ERRORS.bad_firm;
 		}
 		else if ( hasAccessTokenExpired(accessToken) ) {
 			tokenSet.err = _ERRORS.accesstoken_expired;
+		}
+		else {
+			tokenSet = { consummerId : token[0], timestamp : token[1] };
 		}
 		return tokenSet;
 	}

@@ -68,6 +68,16 @@ describe('# accessToken', function() {
 		assert.equal(accessTokenSet.timestamp,timestamp);
 	});
 
+	it('accessToken get a set with invalid token', function() {
+		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY);
+		var accessToken = 'invalid access token';
+		var accessTokenSet = cToken.getAccessTokenSet(accessToken);
+		debug('accessToken get a set with invalid token', accessTokenSet);
+		assert.notEqual(accessTokenSet,null);
+		assert.notEqual(accessTokenSet.err, null);
+		assert.strictEqual(accessTokenSet.err.err, 'bad_accesstoken');
+	});
+
 	it('accessToken check correct timestamp', function() {
 		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY);
 		var refreshToken = cToken.createRefreshToken();
