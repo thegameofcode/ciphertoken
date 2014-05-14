@@ -111,10 +111,12 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 		else if ( !checkAccessTokenFirm(accessToken) ) {
 			tokenSet.err = _ERRORS.bad_firm;
 		}
-		else if ( hasAccessTokenExpired(accessToken) ) {
-			tokenSet.err = _ERRORS.accesstoken_expired;
-		}
 		else {
+
+			if ( hasAccessTokenExpired(accessToken) ) {
+				tokenSet.err = _ERRORS.accesstoken_expired;
+			}
+			
 			tokenSet = { consummerId : token[0], timestamp : token[1] };
 		}
 		return tokenSet;
