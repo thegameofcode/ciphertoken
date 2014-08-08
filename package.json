@@ -4,7 +4,8 @@
   "description": "Ciphered accessToken management",
   "main": "src/ciphertoken.js",
   "scripts": {
-    "test": "DEBUG=ciphertoken* mocha src/test/*"
+    "test": "DEBUG=ciphertoken* mocha src/test/*",
+    "perf": "DEBUG=ciphertoken* node src/perf/*"
   },
   "repository": {
     "type": "git",
