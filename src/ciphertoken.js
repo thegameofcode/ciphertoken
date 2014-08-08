@@ -36,7 +36,7 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 	var settings = {
 		cipher_algorithm : 'aes-256-cbc',
 		hmac_algorithm : 'md5',
-		digest_encoding : 'hex',
+		hmac_digest_encoding : 'hex',
 		plain_encoding : 'utf8',
 		token_encoding : 'base64',
 		accessTokenExpirationMinutes : 90
@@ -51,7 +51,7 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 	//
 
 	function firmAccessToken (consumerId, timestamp){
-		return crypto.createHmac(settings.hmac_algorithm,getFirmKey()).update(consumerId+timestamp).digest(settings.digest_encoding);
+		return crypto.createHmac(settings.hmac_algorithm,getFirmKey()).update(consumerId+timestamp).digest(settings.hmac_digest_encoding);
 	}
 
 	function cipherAccessTokenSet(accessTokenSet){
