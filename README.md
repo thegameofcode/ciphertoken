@@ -23,7 +23,12 @@ var ciphertoken = require('ciphertoken');
 - __CIPHER_KEY__ : (required) used to cipher the accessToken
 - __FIRM_KEY__ : (required) used to firm the accessToken
 - __options__ : (options) object with options to set up
-- __options.accessTokenExpirationMinutes__ : minutes of accessToken life (90 minutes by default)
+- __options.accessTokenExpirationMinutes__ : minutes of accessToken life (__90__ minutes by default)
+- __options.cipher_algorithm__ : algorithm used to cipher the token (__aes-256-cbc__ by default)
+- __options.hmac_algorithm__ : algorithm used to build the hmac (__md5__ by default)
+- __options.hmac_digest_encoding__ : encoding used in the outbound of the hmac digest (__hex__ by default)
+- __options.plain_encoding__ : encoding used in the data content in the token (__utf8__ by default)
+- __options.token_encoding__ : encoding used in the token format (__base64__ by default)
 
 ```js
 var cToken = ciphertoken.create(CIPHER_KEY,FIRM_KEY[,options]);
