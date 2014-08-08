@@ -32,8 +32,13 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 	// Options
 	//
 
+	// default settings
 	var settings = {
-		algorythm : 'aes-256-cbc',
+		cipher_algorithm : 'aes-256-cbc',
+		hmac_algorithm : 'md5',
+		digest_encoding : 'hex',
+		plain_encoding : 'utf8',
+		token_encoding : 'base64',
 		accessTokenExpirationMinutes : 90
 	}
 
@@ -41,26 +46,25 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 		settings[p] = options[p];
 	}
 
-
 	//
 	// Private methods
 	//
 
 	function firmAccessToken (consumerId, timestamp){
-		return crypto.createHmac('md5',getFirmKey()).update(consumerId+timestamp).digest('hex');
+		return crypto.createHmac(settings.hmac_algorithm,getFirmKey()).update(consumerId+timestamp).digest(settings.digest_encoding);
 	}
 
 	function cipherAccessTokenSet(accessTokenSet){
-		var cipher = crypto.createCipher( settings.algorythm, getCipherKey());
-		var data = cipher.update(accessTokenSet.join('__'), 'utf8', 'base64');
-		return  standarizeToken(data+cipher.final('base64'));
+		var cipher = crypto.createCipher( settings.cipher_algorithm, getCipherKey());
+		var data = cipher.update(accessTokenSet.join('__'), settings.plain_encoding, settings.token_encoding);
+		return  standarizeToken(data+cipher.final(settings.token_encoding));
 	}
 
 	function decipherAccessToken (accessToken){
-		var decipher = crypto.createDecipher( settings.algorythm, getCipherKey() );
-		var data = decipher.update(accessToken, 'base64', 'utf8');
+		var decipher = crypto.createDecipher( settings.cipher_algorithm, getCipherKey() );
+		var data = decipher.update(accessToken, settings.token_encoding, settings.plain_encoding);
 		if ( !data ) return null;
-		return ( data + decipher.final('utf8') ).split('__');
+		return ( data + decipher.final(settings.plain_encoding) ).split('__');
 	}
 
 	function checkAccessTokenFirm(accessToken){
@@ -89,7 +93,7 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 	CipherToken.prototype.ERRORS = _ERRORS;
 
 	CipherToken.prototype.createRefreshToken = function (){
-		return standarizeToken( crypto.randomBytes(100).toString('base64') );
+		return standarizeToken( crypto.randomBytes(100).toString(settings.token_encoding) );
 	}
 
 	CipherToken.prototype.createAccessToken = function (consumerId,timestamp){
