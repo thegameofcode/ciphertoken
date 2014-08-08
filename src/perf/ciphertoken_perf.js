@@ -13,15 +13,18 @@ var INVALID_FIRM_KEY = 'myFirmKey12345';
 var perfOps = { create : 'create', check_ts : 'check_ts', check_firm : 'check_firm', read : 'read' };
 var perfTypes = { token : 'token', refreshToken : 'refreshToken', accessToken : 'accessToken' };
 var perfTasks = [
-	{ amount : 100 		, op: perfOps.create, type : perfTypes.token },
-	{ amount : 1000 	, op: perfOps.create, type : perfTypes.token },
-	{ amount : 10000 	, op: perfOps.create, type : perfTypes.token },
+
 	{ amount : 100 		, op: perfOps.create, type : perfTypes.refreshToken },
 	{ amount : 1000 	, op: perfOps.create, type : perfTypes.refreshToken },
 	{ amount : 10000 	, op: perfOps.create, type : perfTypes.refreshToken },
+	{ amount : 50000 	, op: perfOps.create, type : perfTypes.refreshToken },
+	{ amount : 100000 	, op: perfOps.create, type : perfTypes.refreshToken },
+
 	{ amount : 100		, op: perfOps.create, type : perfTypes.accessToken },
 	{ amount : 1000 	, op: perfOps.create, type : perfTypes.accessToken },
 	{ amount : 10000 	, op: perfOps.create, type : perfTypes.accessToken },
+	{ amount : 50000 	, op: perfOps.create, type : perfTypes.accessToken },
+	{ amount : 100000 	, op: perfOps.create, type : perfTypes.accessToken },
 
 	{ amount : 100 		, op: perfOps.check_ts, type : perfTypes.accessToken },
 	{ amount : 1000 	, op: perfOps.check_ts, type : perfTypes.accessToken },
