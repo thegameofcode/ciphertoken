@@ -7,6 +7,7 @@ var ciphertoken = require('../ciphertoken');
 var VALID_CIPHER_KEY = 'myCipherKey123';
 var VALID_FIRM_KEY 	 = 'myFirmKey123';
 var VALID_USER_ID 	 = 'myUserId123';
+var VALID_DATA       = {random: 1, testkey: "as__df", va__l: "dadsfa"};
 
 var INVALID_FIRM_KEY = 'myFirmKey12345';
 
@@ -52,7 +53,7 @@ describe('# accessToken', function() {
 
 	it('accessToken creation ok', function() {
 		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY);
-		var accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime());
+		var accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime(), VALID_DATA);
 		debug('accessToken creation ok', accessToken);
 		assert.notEqual(accessToken,null);
 	});
@@ -60,12 +61,13 @@ describe('# accessToken', function() {
 	it('accessToken get a set ok', function() {
 		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY);
 		var timestamp = new Date().getTime();
-		var accessToken = cToken.createAccessToken(VALID_USER_ID,timestamp);
+		var accessToken = cToken.createAccessToken(VALID_USER_ID,timestamp, VALID_DATA);
 		var accessTokenSet = cToken.getAccessTokenSet(accessToken);
 		debug('accessToken get a set ok', accessTokenSet);
 		assert.notEqual(accessTokenSet,null);
 		assert.equal(accessTokenSet.consummerId,VALID_USER_ID);
 		assert.equal(accessTokenSet.timestamp,timestamp);
+		assert.deepEqual(accessTokenSet.data,VALID_DATA);
 	});
 
 	it('accessToken get a set with invalid token', function() {
@@ -97,7 +99,7 @@ describe('# accessToken', function() {
 	it('accessToken check correct firm', function() {
 		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY);
 		var refreshToken = cToken.createRefreshToken();
-		var accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime());
+		var accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime(), VALID_DATA);
 		debug('accessToken check correct firm', accessToken);
 		assert.equal( cToken.checkAccessTokenFirm( accessToken ), true );
 	});
