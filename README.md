@@ -36,7 +36,7 @@ var cToken = ciphertoken.create(CIPHER_KEY,FIRM_KEY[,options]);
 
 ### Methods
 - __createRefreshToken()__ : returns a randomBytes encodes to the RFC 4648 Spec
-- __createAccessToken(CONSUMMER_ID,TIMESTAMP)__ : returns a ciphered and firmed accessToken
+- __createAccessToken(CONSUMMER_ID,TIMESTAMP, [DATA])__ : returns a ciphered and firmed accessToken
 - __getAccessTokenSet(ACCESS_TOKEN)__ : returns an array with the consumerId and timestamp, this method check the firm authenticity and the timestamp expiration (90 minutes by default), force can be used to return the accessToken in any case
 - __getAccessTokenExpiration(ACCESS_TOKEN)__ : returns an object with property 'expired'. This property is true when timestamp is expired and false when is valid. Although, returns 'err' property if the firm fails.
 
@@ -56,7 +56,12 @@ function newUser(callback){
 
 function createUserAccess(userId,callback){
   db.get({id:userId},function(err,userDb){
-    callback(err,{accessToken : cToken.createAccessToken(userDb.id,new Date().getTime()) );
+    // data can be any object that could be serialized with JSON.stringify()
+    var data = {
+       name: userDb.name,
+       access_permissions: userDb.access_permissions
+    };
+    callback(err,{accessToken : cToken.createAccessToken(userDb.id,new Date().getTime(), data) );
   });
 }
 
@@ -65,12 +70,17 @@ function getUserIdByAccessToken(accessToken){
   return accessTokenSet.consummerId; // userId
 }
 
+function getUserDataByAccessToken(accessToken){
+  var accessTokenSet = cToken.getAccessTokenSet(accessToken);
+  return accessTokenSet.data; // userData
+}
+
 function renewAccessTokenIfExpired(accessToken){
   if ( !cToken.getAccessTokenExpiration(accessToken).expired ){
     return accessToken; 
   }
   else {
-    return cToken.createAccessToken(getUserIdByAccessToken(accessToken),new Date().getTime())
+    return cToken.createAccessToken(getUserIdByAccessToken(accessToken),new Date().getTime(), getUserDataByAccessToken(accessToken))
   }
 }
 
