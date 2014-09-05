@@ -7,7 +7,7 @@ var ciphertoken = require('../ciphertoken');
 var VALID_CIPHER_KEY = 'myCipherKey123';
 var VALID_FIRM_KEY 	 = 'myFirmKey123';
 var VALID_USER_ID 	 = 'myUserId123';
-var VALID_DATA       = require('./bigdata.json').data;
+var VALID_DATA       = require('./bigdata11k.json').data;
 
 var INVALID_FIRM_KEY = 'myFirmKey12345';
 
