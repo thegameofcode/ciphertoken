@@ -1,10 +1,10 @@
 var debug = require('debug')('ciphertoken');
 var crypto = require('crypto');
 
-var CreateCipherToken = function (cipherKey, firmKey, options){
+var createCipherToken = function (cipherKey, firmKey, options) {
 	'use strict';
 
-	function CipherToken(){ }
+	function CipherToken () {}
 
 	var _ERRORS = {
 		cipherkey_required : { err:'cipherkey_required',des:'cipherKey parameter is mandatory' },
@@ -12,8 +12,8 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 		bad_firm : { err:'bad_firm',des:'firm is not valid' },
 		bad_accesstoken : { err:'bad_accesstoken', des:'accesstoken is not valid' },
 		accesstoken_expired : { err:'accesstoken_expired',des:'accesstoken has expired it must be renewed' },
-        serialization_error: { err: 'serialization_error', des: 'error during data serialization'},
-        unserialization_error: { err: 'unserialization_error', des: 'error during data deserialization'}
+		serialization_error: { err: 'serialization_error', des: 'error during data serialization'},
+		unserialization_error: { err: 'unserialization_error', des: 'error during data deserialization'}
 	};
 
 	//
@@ -21,14 +21,8 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 	//
 
 	if(!cipherKey) throw _ERRORS.cipherkey_required;
-	function getCipherKey (){
-		return cipherKey;
-	}
-
 	if(!firmKey) throw _ERRORS.firmkey_required;
-	function getFirmKey (){
-		return firmKey;
-	}
+
 
 	//
 	// Options
@@ -44,7 +38,7 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 		accessTokenExpirationMinutes : 90
 	};
 
-	for ( var p in options ){
+	for ( var p in options ) {
 		settings[p] = options[p];
 	}
 
@@ -52,7 +46,7 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 	// Private methods
 	//
 
-	function serialize(data){
+	function serialize (data) {
 		try {
 			return JSON.stringify(data);
 		} catch (e) {
@@ -61,7 +55,7 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 		}
 	}
 
-	function unserialize(data) {
+	function unserialize (data) {
 		try {
 			return JSON.parse(data);
 		} catch (e) {
@@ -70,42 +64,42 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 		}
 	}
 
-	function firmAccessToken (consumerId, timestamp, serializedData){
-		return crypto.createHmac(settings.hmac_algorithm, getFirmKey()).
+	function firmAccessToken (consumerId, timestamp, serializedData) {
+		return crypto.createHmac(settings.hmac_algorithm, firmKey).
 			update(consumerId + timestamp + serializedData).
 			digest(settings.hmac_digest_encoding);
 	}
 
-	function cipherAccessTokenSet(accessTokenSet){
-		var cipher = crypto.createCipher( settings.cipher_algorithm, getCipherKey());
+	function cipherAccessTokenSet (accessTokenSet) {
+		var cipher = crypto.createCipher( settings.cipher_algorithm, cipherKey );
 		var data = cipher.update(serialize(accessTokenSet), settings.plain_encoding, settings.token_encoding);
 		return  standarizeToken(data + cipher.final(settings.token_encoding));
 	}
 
-	function decipherAccessToken (accessToken){
-		var decipher = crypto.createDecipher( settings.cipher_algorithm, getCipherKey() );
+	function decipherAccessToken (accessToken) {
+		var decipher = crypto.createDecipher( settings.cipher_algorithm, cipherKey );
 		var data = decipher.update(accessToken, settings.token_encoding, settings.plain_encoding);
 		if ( !data ) return null;
 		data =  unserialize( data + decipher.final(settings.plain_encoding) );
         return data;
 	}
 
-	function checkAccessTokenFirm(accessTokenSet){
+	function checkAccessTokenFirm (accessTokenSet) {
 		var serializedData = serialize(accessTokenSet.data);
 		var firm = firmAccessToken(accessTokenSet.consumerId, accessTokenSet.timestamp, serializedData);
 		debug('checkAccessTokenFirm: accessTokenSet.firm=', accessTokenSet.firm, ', firm=', firm);
 		return (firm === accessTokenSet.firm);
 	}
 
-	function hasAccessTokenExpired(accessTokenSet){
-		return ((new Date().getTime()-accessTokenSet[1]) > settings.accessTokenExpirationMinutes*60*1000);
+	function hasAccessTokenExpired (accessTokenSet) {
+		return ((new Date().getTime() - accessTokenSet.timestamp) > settings.accessTokenExpirationMinutes * 60 * 1000);
 	}
 
-	function standarizeToken(token){
+	function standarizeToken (token) {
 		return token.
-			replace(/\+/g, '-'). 	// Convert '+' to '-'
-			replace(/\//g, '_'). 	// Convert '/' to '_'
-			replace(/=+$/, '') 		// Remove ending '='
+			replace(/\+/g, '-').    // Convert '+' to '-'
+			replace(/\//g, '_').    // Convert '/' to '_'
+			replace(/=+$/, '')      // Remove ending '='
 		;
 	}
 
@@ -115,11 +109,11 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 
 	CipherToken.prototype.ERRORS = _ERRORS;
 
-	CipherToken.prototype.createRefreshToken = function (){
+	CipherToken.prototype.createRefreshToken = function () {
 		return standarizeToken( crypto.randomBytes(100).toString(settings.token_encoding) );
 	};
 
-	CipherToken.prototype.createAccessToken = function (consumerId, timestamp, data){
+	CipherToken.prototype.createAccessToken = function (consumerId, timestamp, data) {
 		if(!timestamp) timestamp = new Date().getTime();
 
 		var serializedData = serialize(data || {});
@@ -135,12 +129,12 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 		return cipherAccessTokenSet(accessTokenSet);
 	};
 
-	CipherToken.prototype.checkAccessTokenFirm = function (accessToken){
+	CipherToken.prototype.checkAccessTokenFirm = function (accessToken) {
 		var accessTokenSet = decipherAccessToken(accessToken);
 		return checkAccessTokenFirm(accessTokenSet);
 	};
 
-	CipherToken.prototype.getAccessTokenSet = function (accessToken){
+	CipherToken.prototype.getAccessTokenSet = function (accessToken) {
 		var tokenSet = {};
 		var token = decipherAccessToken(accessToken);
 
@@ -161,7 +155,7 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 		return tokenSet;
 	};
 
-	CipherToken.prototype.getAccessTokenExpiration = function (accessToken){
+	CipherToken.prototype.getAccessTokenExpiration = function (accessToken) {
 		var accessTokenSet = decipherAccessToken(accessToken);
 		var result = { expired : hasAccessTokenExpired(accessTokenSet) };
 		if ( !checkAccessTokenFirm(accessTokenSet) ) {
@@ -173,4 +167,4 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 	return new CipherToken();
 };
 
-module.exports = { create : CreateCipherToken };
+module.exports = { create : createCipherToken };
