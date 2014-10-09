@@ -1,5 +1,4 @@
 var debug = require('debug')('ciphertoken-test');
-var crypto = require('crypto');
 var assert = require('assert');
 
 var ciphertoken = require('../ciphertoken');
@@ -65,7 +64,7 @@ describe('# accessToken', function() {
 		var accessTokenSet = cToken.getAccessTokenSet(accessToken);
 		debug('accessToken get a set ok', accessTokenSet);
 		assert.notEqual(accessTokenSet,null);
-		assert.equal(accessTokenSet.consummerId,VALID_USER_ID);
+		assert.equal(accessTokenSet.consumerId,VALID_USER_ID);
 		assert.equal(accessTokenSet.timestamp,timestamp);
 		assert.deepEqual(accessTokenSet.data,VALID_DATA);
 	});
@@ -82,7 +81,6 @@ describe('# accessToken', function() {
 
 	it('accessToken check correct timestamp', function() {
 		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY);
-		var refreshToken = cToken.createRefreshToken();
 		var accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime());
 		debug('accessToken check correct timestamp', accessToken);
 		assert.equal( cToken.getAccessTokenExpiration( accessToken ).expired, false );

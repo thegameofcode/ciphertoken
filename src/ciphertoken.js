@@ -6,7 +6,6 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 
 	function CipherToken(){ }
 
-    var SEPARATOR = '_`$ep@r4t0r`_';
 	var _ERRORS = {
 		cipherkey_required : { err:'cipherkey_required',des:'cipherKey parameter is mandatory' },
 		firmkey_required : { err:'firmkey_required',des:'firmKey parameter is mandatory' },
@@ -15,7 +14,7 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 		accesstoken_expired : { err:'accesstoken_expired',des:'accesstoken has expired it must be renewed' },
         serialization_error: { err: 'serialization_error', des: 'error during data serialization'},
         unserialization_error: { err: 'unserialization_error', des: 'error during data deserialization'}
-	}
+	};
 
 	//
 	// Mandatory parameters
@@ -31,24 +30,6 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 		return firmKey;
 	}
 
-
-    function serialize(data){
-        try {
-            return JSON.stringify(data);
-        } catch (e) {
-            debug('Serialization error', e);
-            throw _ERRORS.serialization_error;
-        }
-    }
-
-    function unserialize(data) {
-        try {
-            return JSON.parse(data);
-        } catch (e) {
-            debug('Serialization error', e);
-            throw _ERRORS.unserialization_error;
-        }
-    }
 	//
 	// Options
 	//
@@ -61,7 +42,7 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 		plain_encoding : 'utf8',
 		token_encoding : 'base64',
 		accessTokenExpirationMinutes : 90
-	}
+	};
 
 	for ( var p in options ){
 		settings[p] = options[p];
@@ -71,34 +52,52 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 	// Private methods
 	//
 
+	function serialize(data){
+		try {
+			return JSON.stringify(data);
+		} catch (e) {
+			debug('Serialization error', e);
+			throw _ERRORS.serialization_error;
+		}
+	}
+
+	function unserialize(data) {
+		try {
+			return JSON.parse(data);
+		} catch (e) {
+			debug('Serialization error', e);
+			throw _ERRORS.unserialization_error;
+		}
+	}
+
 	function firmAccessToken (consumerId, timestamp, serializedData){
-		return crypto.createHmac(settings.hmac_algorithm,getFirmKey()).update(consumerId+timestamp+serializedData).digest(settings.hmac_digest_encoding);
+		return crypto.createHmac(settings.hmac_algorithm, getFirmKey()).
+			update(consumerId + timestamp + serializedData).
+			digest(settings.hmac_digest_encoding);
 	}
 
 	function cipherAccessTokenSet(accessTokenSet){
 		var cipher = crypto.createCipher( settings.cipher_algorithm, getCipherKey());
-		var data = cipher.update(accessTokenSet.join(SEPARATOR), settings.plain_encoding, settings.token_encoding);
-		return  standarizeToken(data+cipher.final(settings.token_encoding));
+		var data = cipher.update(serialize(accessTokenSet), settings.plain_encoding, settings.token_encoding);
+		return  standarizeToken(data + cipher.final(settings.token_encoding));
 	}
 
 	function decipherAccessToken (accessToken){
 		var decipher = crypto.createDecipher( settings.cipher_algorithm, getCipherKey() );
 		var data = decipher.update(accessToken, settings.token_encoding, settings.plain_encoding);
 		if ( !data ) return null;
-		data =  ( data + decipher.final(settings.plain_encoding) ).split(SEPARATOR);
-        data[2] = unserialize(data[2]);
+		data =  unserialize( data + decipher.final(settings.plain_encoding) );
         return data;
 	}
 
-	function checkAccessTokenFirm(accessToken){
-		var accessTokenSet = decipherAccessToken(accessToken);
-        var serializedData = serialize(accessTokenSet[2]);
-		debug('checkAccessTokenFirm', accessTokenSet, firmAccessToken(accessTokenSet[0], accessTokenSet[1], serializedData ));
-		return (firmAccessToken(accessTokenSet[0], accessTokenSet[1], serializedData) === accessTokenSet[3]);
+	function checkAccessTokenFirm(accessTokenSet){
+		var serializedData = serialize(accessTokenSet.data);
+		var firm = firmAccessToken(accessTokenSet.consumerId, accessTokenSet.timestamp, serializedData);
+		debug('checkAccessTokenFirm: accessTokenSet.firm=', accessTokenSet.firm, ', firm=', firm);
+		return (firm === accessTokenSet.firm);
 	}
 
-	function hasAccessTokenExpired(accessToken){
-		var accessTokenSet = decipherAccessToken(accessToken);
+	function hasAccessTokenExpired(accessTokenSet){
 		return ((new Date().getTime()-accessTokenSet[1]) > settings.accessTokenExpirationMinutes*60*1000);
 	}
 
@@ -118,48 +117,60 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 
 	CipherToken.prototype.createRefreshToken = function (){
 		return standarizeToken( crypto.randomBytes(100).toString(settings.token_encoding) );
-	}
+	};
 
-	CipherToken.prototype.createAccessToken = function (consumerId,timestamp, data){
+	CipherToken.prototype.createAccessToken = function (consumerId, timestamp, data){
 		if(!timestamp) timestamp = new Date().getTime();
-        data = data || {};
-		var accessTokenSet = [consumerId,timestamp,serialize(data),firmAccessToken(consumerId, timestamp, serialize(data))];
+
+		var serializedData = serialize(data || {});
+		var firm = firmAccessToken(consumerId, timestamp, serializedData);
+
+		var accessTokenSet = {
+			consumerId  : consumerId,
+			timestamp   : timestamp,
+			data        : data,
+			firm        : firm
+		};
+
 		return cipherAccessTokenSet(accessTokenSet);
-	}
+	};
 
 	CipherToken.prototype.checkAccessTokenFirm = function (accessToken){
-		return checkAccessTokenFirm(accessToken);
-	}
+		var accessTokenSet = decipherAccessToken(accessToken);
+		return checkAccessTokenFirm(accessTokenSet);
+	};
 
 	CipherToken.prototype.getAccessTokenSet = function (accessToken){
 		var tokenSet = {};
 		var token = decipherAccessToken(accessToken);
+
 		if ( !token ) {
 			tokenSet.err = _ERRORS.bad_accesstoken;
-		}
-		else if ( !checkAccessTokenFirm(accessToken) ) {
+
+		} else if ( !checkAccessTokenFirm(token) ) {
 			tokenSet.err = _ERRORS.bad_firm;
-		}
-		else {
 
-			if ( hasAccessTokenExpired(accessToken) ) {
-				tokenSet.err = _ERRORS.accesstoken_expired;
-			}
+		} else if ( hasAccessTokenExpired(token) ) {
+			tokenSet.err = _ERRORS.accesstoken_expired;
 
-			tokenSet = { consummerId : token[0], timestamp : token[1], data: token[2] };
+		} else {
+			tokenSet = token;
+			delete tokenSet.firm;
 		}
+
 		return tokenSet;
-	}
+	};
 
 	CipherToken.prototype.getAccessTokenExpiration = function (accessToken){
-		var result = { expired : hasAccessTokenExpired(accessToken) };
-		if ( !checkAccessTokenFirm(accessToken) ) {
+		var accessTokenSet = decipherAccessToken(accessToken);
+		var result = { expired : hasAccessTokenExpired(accessTokenSet) };
+		if ( !checkAccessTokenFirm(accessTokenSet) ) {
 			result.err = _ERRORS.bad_firm;
 		}
 		return result;
-	}
+	};
 
 	return new CipherToken();
 };
 
-module.exports = { create : CreateCipherToken }
+module.exports = { create : CreateCipherToken };
