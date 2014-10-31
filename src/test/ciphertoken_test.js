@@ -1,5 +1,4 @@
 var debug = require('debug')('ciphertoken-test');
-var crypto = require('crypto');
 var assert = require('assert');
 
 var ciphertoken = require('../ciphertoken');
@@ -20,7 +19,7 @@ describe('# Creation', function() {
 
 	it('CipherToken creation with no cipher key error', function() {
 		try {
-			var cToken = ciphertoken.create();
+			ciphertoken.create();
 		}
 		catch (err) {
 			debug('creation error no cipher key', err);
@@ -30,7 +29,7 @@ describe('# Creation', function() {
 
 	it('CipherToken creation with no hmac key error', function() {
 		try {
-			var cToken = ciphertoken.create(VALID_CIPHER_KEY);
+			ciphertoken.create(VALID_CIPHER_KEY);
 		}
 		catch (err) {
 			debug('Creation error no hmac key', err);
@@ -82,7 +81,7 @@ describe('# accessToken', function() {
 
 	it('accessToken check correct timestamp', function() {
 		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY);
-		var refreshToken = cToken.createRefreshToken();
+		cToken.createRefreshToken();
 		var accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime());
 		debug('accessToken check correct timestamp', accessToken);
 		assert.equal( cToken.getAccessTokenExpiration( accessToken ).expired, false );
@@ -90,7 +89,7 @@ describe('# accessToken', function() {
 
 	it('accessToken check incorrect timestamp', function() {
 		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY);
-		var refreshToken = cToken.createRefreshToken();
+		cToken.createRefreshToken();
 		var accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime()-999999);
 		debug('accessToken check incorrect timestamp', accessToken);
 		assert.equal( cToken.getAccessTokenExpiration( accessToken ).expired, false );
@@ -98,7 +97,7 @@ describe('# accessToken', function() {
 
 	it('accessToken check correct firm', function() {
 		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY);
-		var refreshToken = cToken.createRefreshToken();
+		cToken.createRefreshToken();
 		var accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime(), VALID_DATA);
 		debug('accessToken check correct firm', accessToken);
 		assert.equal( cToken.checkAccessTokenFirm( accessToken ), true );
