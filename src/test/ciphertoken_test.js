@@ -135,7 +135,7 @@ describe('sessionId', function(){
 		assert.notEqual(accessTokenSet.sessionId, null);
 	});
 
-	it('accessToken default config does not include a sessionId', function() {
+	it('accessToken default creation does not include a sessionId', function() {
 		var cToken = ciphertoken.create(VALID_CIPHER_KEY, VALID_FIRM_KEY);
 		var accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime(), VALID_DATA);
 		var accessTokenSet = cToken.getAccessTokenSet(accessToken);
@@ -143,7 +143,7 @@ describe('sessionId', function(){
 		assert.equal(accessTokenSet.sessionId, null);
 	});
 
-	it('sessionIds must be different access token creations', function(){
+	it('sessionIds must be different for different access token creations', function(){
 		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY, {'enableSessionId': true});
 		var accessToken1 = cToken.createAccessToken('user1',new Date().getTime());
 		var accessToken2 = cToken.createAccessToken('user2',new Date().getTime());

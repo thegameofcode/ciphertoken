@@ -29,6 +29,7 @@ var ciphertoken = require('ciphertoken');
 - __options.hmac_digest_encoding__ : encoding used in the outbound of the hmac digest (__hex__ by default)
 - __options.plain_encoding__ : encoding used in the data content in the token (__utf8__ by default)
 - __options.token_encoding__ : encoding used in the token format (__base64__ by default)
+- __options.enableSessionId__ : sessionId of an accessToken, can be preset at accessToken creation
 
 ```js
 var cToken = ciphertoken.create(CIPHER_KEY,FIRM_KEY[,options]);
