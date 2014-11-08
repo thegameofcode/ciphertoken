@@ -76,6 +76,11 @@ function getUserDataByAccessToken(accessToken){
   return accessTokenSet.data; // userData
 }
 
+function getSessionIdByAccessToken(accessToken){
+  var accessTokenSet = cToken.getAccessTokenSet(accessToken);
+  return accessTokenSet.sessionId; //sessionId
+}
+
 function renewAccessTokenIfExpired(accessToken){
   if ( !cToken.getAccessTokenExpiration(accessToken).expired ){
     return accessToken; 
@@ -83,6 +88,15 @@ function renewAccessTokenIfExpired(accessToken){
   else {
     return cToken.createAccessToken(getUserIdByAccessToken(accessToken),new Date().getTime(), getUserDataByAccessToken(accessToken))
   }
+}
+
+function renewAccessTokenWithSessionId(accessToken){
+  var userId = getUserIdByAccessToken(accessToken),
+      date = new Date().getTime(),
+      data = getUserDataByAccessToken(accessToken),
+      sessionId = getSessionIdByAccessToken(accessToken);
+
+  return cToken.createAccessToken(userId, date, data, sessionId);
 }
 
 ```

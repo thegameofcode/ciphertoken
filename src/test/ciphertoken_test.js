@@ -128,28 +128,28 @@ describe('# accessToken', function() {
 });
 describe('sessionId', function(){
 	it('accessToken creation has a sessionId', function() {
-		var cToken = ciphertoken.create(VALID_CIPHER_KEY, VALID_FIRM_KEY, {'enableSessionId': true});
-		var accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime(), VALID_DATA);
-		var accessTokenSet = cToken.getAccessTokenSet(accessToken);
+		var cToken = ciphertoken.create(VALID_CIPHER_KEY, VALID_FIRM_KEY, {'enableSessionId': true}),
+			accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime(), VALID_DATA),
+			accessTokenSet = cToken.getAccessTokenSet(accessToken);
 
 		assert.notEqual(accessTokenSet.sessionId, null);
 	});
 
 	it('accessToken default creation does not include a sessionId', function() {
-		var cToken = ciphertoken.create(VALID_CIPHER_KEY, VALID_FIRM_KEY);
-		var accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime(), VALID_DATA);
-		var accessTokenSet = cToken.getAccessTokenSet(accessToken);
+		var cToken = ciphertoken.create(VALID_CIPHER_KEY, VALID_FIRM_KEY),
+			accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime(), VALID_DATA),
+			accessTokenSet = cToken.getAccessTokenSet(accessToken);
 
 		assert.equal(accessTokenSet.sessionId, null);
 	});
 
 	it('sessionIds must be different for different access token creations', function(){
-		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY, {'enableSessionId': true});
-		var accessToken1 = cToken.createAccessToken('user1',new Date().getTime());
-		var accessToken2 = cToken.createAccessToken('user2',new Date().getTime());
+		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY, {'enableSessionId': true}),
+			accessToken1 = cToken.createAccessToken('user1',new Date().getTime()),
+			accessToken2 = cToken.createAccessToken('user2',new Date().getTime());
 
-		var accessTokenSet1 = cToken.getAccessTokenSet(accessToken1);
-		var accessTokenSet2 = cToken.getAccessTokenSet(accessToken2);
+		var accessTokenSet1 = cToken.getAccessTokenSet(accessToken1),
+			accessTokenSet2 = cToken.getAccessTokenSet(accessToken2);
 
 		assert.notEqual(accessTokenSet1.sessionId, accessTokenSet2.sessionId);
 	});
@@ -157,9 +157,9 @@ describe('sessionId', function(){
 	it('accept creation of accessToken with desired sessionId', function() {
 		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY, {'enableSessionId': true});
 
-		var desiredSessionId = '1234abc567';
-		var accessToken = cToken.createAccessToken(VALID_USER_ID, new Date().getTime(), {}, desiredSessionId);
-		var accessTokenSet = cToken.getAccessTokenSet(accessToken);
+		var desiredSessionId = '1234abc567',
+			accessToken = cToken.createAccessToken(VALID_USER_ID, new Date().getTime(), {}, desiredSessionId),
+			accessTokenSet = cToken.getAccessTokenSet(accessToken);
 
 		assert.equal(accessTokenSet.sessionId, desiredSessionId);
 	});
