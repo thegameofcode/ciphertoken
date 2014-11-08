@@ -72,7 +72,10 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 	// Private methods
 	//
 
-	function firmAccessToken (consumerId, timestamp, serializedData){
+	function firmAccessToken (consumerId, timestamp, serializedData, sessionId){
+		if (settings.enableSessionId) {
+			return crypto.createHmac(settings.hmac_algorithm,getFirmKey()).update(consumerId+timestamp+serializedData+sessionId).digest(settings.hmac_digest_encoding);
+		}
 		return crypto.createHmac(settings.hmac_algorithm,getFirmKey()).update(consumerId+timestamp+serializedData).digest(settings.hmac_digest_encoding);
 	}
 
@@ -91,9 +94,21 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
         return data;
 	}
 
+	function getSessionId(accessToken) {
+		var accessTokenSet = decipherAccessToken(accessToken);
+		return accessTokenSet[3]
+	}
+
 	function checkAccessTokenFirm(accessToken){
 		var accessTokenSet = decipherAccessToken(accessToken);
         var serializedData = serialize(accessTokenSet[2]);
+
+		if (settings.enableSessionId) {
+			var sessionId = getSessionId(accessToken);
+			debug('checkAccessTokenFirm', accessTokenSet, firmAccessToken(accessTokenSet[0], accessTokenSet[1], serializedData, sessionId));
+
+			return (firmAccessToken(accessTokenSet[0], accessTokenSet[1], serializedData, sessionId) === accessTokenSet[4]);
+		}
 		debug('checkAccessTokenFirm', accessTokenSet, firmAccessToken(accessTokenSet[0], accessTokenSet[1], serializedData ));
 		return (firmAccessToken(accessTokenSet[0], accessTokenSet[1], serializedData) === accessTokenSet[3]);
 	}
@@ -121,11 +136,14 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 		return standarizeToken( crypto.randomBytes(100).toString(settings.token_encoding) );
 	}
 
-	CipherToken.prototype.createAccessToken = function (consumerId,timestamp, data){
+	CipherToken.prototype.createAccessToken = function (consumerId, timestamp, data){
 		if(!timestamp) timestamp = new Date().getTime();
         data = data || {};
-		var accessTokenSet = [consumerId,timestamp,serialize(data),firmAccessToken(consumerId, timestamp, serialize(data))];
-		return cipherAccessTokenSet(accessTokenSet);
+		if (settings.enableSessionId){
+			var sessionId = crypto.randomBytes(20);
+			return cipherAccessTokenSet([consumerId, timestamp, serialize(data), sessionId, firmAccessToken(consumerId, timestamp, serialize(data), sessionId)]);
+		}
+		return cipherAccessTokenSet([consumerId, timestamp, serialize(data), firmAccessToken(consumerId, timestamp, serialize(data))]);
 	}
 
 	CipherToken.prototype.checkAccessTokenFirm = function (accessToken){
@@ -148,7 +166,7 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 			}
 
 			if (settings.enableSessionId) {
-				tokenSet = { consummerId : token[0], timestamp : token[1], data: token[2], sessionId: '123' };
+				tokenSet = { consummerId : token[0], timestamp : token[1], data: token[2], sessionId: token[3] };
 			} else {
 				tokenSet = { consummerId : token[0], timestamp : token[1], data: token[2]};
 			}
@@ -163,7 +181,6 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 		}
 		return result;
 	}
-
 	return new CipherToken();
 };
 

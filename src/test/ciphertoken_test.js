@@ -131,8 +131,16 @@ describe('# accessToken', function() {
 		assert.equal(accessTokenSet.sessionId, null);
 	});
 
+	it('sessionIds must be different for different userIds', function(){
+		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY, {'enableSessionId': true});
+		var accessToken1 = cToken.createAccessToken('user1',new Date().getTime());
+		var accessToken2 = cToken.createAccessToken('user2',new Date().getTime());
 
+		var accessTokenSet1 = cToken.getAccessTokenSet(accessToken1);
+		var accessTokenSet2 = cToken.getAccessTokenSet(accessToken2);
 
+		assert.notEqual(accessTokenSet1.sessionId, accessTokenSet2.sessionId);
+	});
 
 /**
 	TODO TEST COMMON ATTACKS
