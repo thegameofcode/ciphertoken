@@ -136,11 +136,11 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 		return standarizeToken( crypto.randomBytes(100).toString(settings.token_encoding) );
 	}
 
-	CipherToken.prototype.createAccessToken = function (consumerId, timestamp, data){
+	CipherToken.prototype.createAccessToken = function (consumerId, timestamp, data, sessionId){
 		if(!timestamp) timestamp = new Date().getTime();
         data = data || {};
 		if (settings.enableSessionId){
-			var sessionId = crypto.randomBytes(20);
+			var sessionId = sessionId !== undefined ? sessionId : crypto.randomBytes(20);
 			return cipherAccessTokenSet([consumerId, timestamp, serialize(data), sessionId, firmAccessToken(consumerId, timestamp, serialize(data), sessionId)]);
 		}
 		return cipherAccessTokenSet([consumerId, timestamp, serialize(data), firmAccessToken(consumerId, timestamp, serialize(data))]);

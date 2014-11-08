@@ -115,6 +115,18 @@ describe('# accessToken', function() {
 
 	});
 
+
+	/**
+	 TODO TEST COMMON ATTACKS
+
+	 it('attempted accessToken modification', function() {
+
+	});
+
+	 **/
+
+});
+describe('sessionId', function(){
 	it('accessToken creation has a sessionId', function() {
 		var cToken = ciphertoken.create(VALID_CIPHER_KEY, VALID_FIRM_KEY, {'enableSessionId': true});
 		var accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime(), VALID_DATA);
@@ -131,7 +143,7 @@ describe('# accessToken', function() {
 		assert.equal(accessTokenSet.sessionId, null);
 	});
 
-	it('sessionIds must be different for different userIds', function(){
+	it('sessionIds must be different access token creations', function(){
 		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY, {'enableSessionId': true});
 		var accessToken1 = cToken.createAccessToken('user1',new Date().getTime());
 		var accessToken2 = cToken.createAccessToken('user2',new Date().getTime());
@@ -142,14 +154,14 @@ describe('# accessToken', function() {
 		assert.notEqual(accessTokenSet1.sessionId, accessTokenSet2.sessionId);
 	});
 
-/**
-	TODO TEST COMMON ATTACKS
+	it('accept creation of accessToken with desired sessionId', function() {
+		var cToken = ciphertoken.create(VALID_CIPHER_KEY,VALID_FIRM_KEY, {'enableSessionId': true});
 
-	it('attempted accessToken modification', function() {
+		var desiredSessionId = '1234abc567';
+		var accessToken = cToken.createAccessToken(VALID_USER_ID, new Date().getTime(), {}, desiredSessionId);
+		var accessTokenSet = cToken.getAccessTokenSet(accessToken);
 
+		assert.equal(accessTokenSet.sessionId, desiredSessionId);
 	});
-
-**/
-
 
 });
