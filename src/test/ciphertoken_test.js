@@ -115,6 +115,25 @@ describe('# accessToken', function() {
 
 	});
 
+	it('accessToken creation has a sessionId', function() {
+		var cToken = ciphertoken.create(VALID_CIPHER_KEY, VALID_FIRM_KEY, {'enableSessionId': true});
+		var accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime(), VALID_DATA);
+		var accessTokenSet = cToken.getAccessTokenSet(accessToken);
+
+		assert.notEqual(accessTokenSet.sessionId, null);
+	});
+
+	it('accessToken default config does not include a sessionId', function() {
+		var cToken = ciphertoken.create(VALID_CIPHER_KEY, VALID_FIRM_KEY);
+		var accessToken = cToken.createAccessToken(VALID_USER_ID,new Date().getTime(), VALID_DATA);
+		var accessTokenSet = cToken.getAccessTokenSet(accessToken);
+
+		assert.equal(accessTokenSet.sessionId, null);
+	});
+
+
+
+
 /**
 	TODO TEST COMMON ATTACKS
 
@@ -123,14 +142,6 @@ describe('# accessToken', function() {
 	});
 
 **/
-	
+
 
 });
-
-
-
-
-
-
-
-

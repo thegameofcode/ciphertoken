@@ -60,7 +60,8 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 		hmac_digest_encoding : 'hex',
 		plain_encoding : 'utf8',
 		token_encoding : 'base64',
-		accessTokenExpirationMinutes : 90
+		accessTokenExpirationMinutes : 90,
+		enableSessionId: false
 	}
 
 	for ( var p in options ){
@@ -146,7 +147,11 @@ var CreateCipherToken = function (cipherKey, firmKey, options){
 				tokenSet.err = _ERRORS.accesstoken_expired;
 			}
 
-			tokenSet = { consummerId : token[0], timestamp : token[1], data: token[2] };
+			if (settings.enableSessionId) {
+				tokenSet = { consummerId : token[0], timestamp : token[1], data: token[2], sessionId: '123' };
+			} else {
+				tokenSet = { consummerId : token[0], timestamp : token[1], data: token[2]};
+			}
 		}
 		return tokenSet;
 	}
