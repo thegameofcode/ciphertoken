@@ -27,5 +27,12 @@ describe.only('Access token generation', function(){
         assert.deepEqual(accessTokenSet.data, DATA);
     });
 
-});
+    it('Should return an error when submitted access token is invalid', function() {
+        var accessToken = 'invalid access token';
+        var accessTokenSet = ctCore.getAccessTokenSet(config, accessToken);
 
+        assert.notEqual(accessTokenSet, null);
+        assert.notEqual(accessTokenSet.err, null);
+        assert.strictEqual(accessTokenSet.err.err, 'Bad accessToken');
+    });
+});

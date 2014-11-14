@@ -12,13 +12,13 @@ const DEFAULT_SETTINGS = {
 };
 
 var _ERRORS = {
-    cipherKeyRequired : {err:'cipherKey required', des:'cipherKey parameter is mandatory'},
-    firmKeyRequired : {err:'firmKey required',des:'firmKey parameter is mandatory'},
-    badFirm : {err:'bad firm',des:'firm is not valid'},
-    badAccessToken : {err:'bad accessToken', des:'accessToken is not valid'},
-    accessTokenExpired : {err:'accessToken expired',des:'accessToken has expired and it must be renewed'},
-    serializationError: {err: 'serialization error', des: 'error during data serialization'},
-    unserializationError: {err: 'unserialization error', des: 'error during data unserialization'}
+    cipherKeyRequired : {err:'CipherKey required', des:'CipherKey parameter is mandatory'},
+    firmKeyRequired : {err:'FirmKey required',des:'FirmKey parameter is mandatory'},
+    badFirm : {err:'Bad firm',des:'Firm is not valid'},
+    badAccessToken : {err:'Bad accessToken', des:'AccessToken is not valid'},
+    accessTokenExpired : {err:'AccessToken expired',des:'AccessToken has expired and it must be renewed'},
+    serializationError: {err: 'Serialization error', des: 'Error during data serialization'},
+    unserializationError: {err: 'Unserialization error', des: 'Error during data unserialization'}
 };
 
 function serialize(data) {
@@ -52,6 +52,16 @@ function firmAccessToken(settings, userId, timestamp, serializedData) {
         .digest(settings.hmacDigestEncoding);
     return firmedToken;
 }
+
+function decipherAccessToken (settings, accessToken){
+    var decipher = crypto.createDecipher(settings.cipherAlgorithm, settings.cipherKey);
+    var decodedToken = decipher.update(accessToken, settings.tokenEncoding, settings.plainEncoding);
+    if (!decodedToken) return null;
+    decodedToken =  (decodedToken + decipher.final(settings.plainEncoding)).split(SEPARATOR);
+    decodedToken[2] = unserialize(decodedToken[2]);
+    return decodedToken;
+}
+
 exports.createAccessToken = function(settings, userId, timestamp, data) {
     for (var p in DEFAULT_SETTINGS) settings[p] = DEFAULT_SETTINGS[p];
 
@@ -71,16 +81,12 @@ exports.createAccessToken = function(settings, userId, timestamp, data) {
 exports.getAccessTokenSet = function(settings, accessToken){
     var tokenSet = {};
 
-    var decipher = crypto.createDecipher(settings.cipherAlgorithm, settings.cipherKey);
-
-
-    var token = decipher.update(accessToken, settings.tokenEncoding, settings.plainEncoding);
-    token =  (token + decipher.final(settings.plainEncoding)).split(SEPARATOR);
-    token[2] = unserialize(token[2]);
-
-    console.log(token);
-
-    tokenSet = { userId : token[0], timestamp : token[1], data: token[2]};
-
+    var token = decipherAccessToken(settings, accessToken);
+    if (!token){
+        tokenSet.err = _ERRORS.badAccessToken;
+    } else {
+        tokenSet = { userId : token[0], timestamp : token[1], data: token[2]};
+    }
     return tokenSet;
 };
+
