@@ -1,6 +1,5 @@
 var crypto = require('crypto');
 
-const SEPARATOR = '_`$ep@r4t0r`_';
 const DEFAULT_SETTINGS = {
     cipherAlgorithm : 'aes-256-cbc',
     hmacAlgorithm : 'md5',
@@ -42,13 +41,18 @@ function unserialize(data) {
     try {
         return JSON.parse(data);
     } catch (e) {
-        throw _ERRORS.unserialization_error;
+        throw _ERRORS.unserializationError;
     }
 }
 
 function firmAccessToken(settings, userId, timestamp, serializedData) {
+    var notFirmedToken = serialize({
+        'userId': userId,
+        'timestamp': timestamp,
+        'data': serializedData
+    });
     var firmedToken = crypto.createHmac(settings.hmacAlgorithm, settings.firmKey)
-        .update(userId + timestamp + serializedData)
+        .update(notFirmedToken)
         .digest(settings.hmacDigestEncoding);
     return firmedToken;
 }
@@ -57,8 +61,9 @@ function decipherAccessToken (settings, accessToken){
     var decipher = crypto.createDecipher(settings.cipherAlgorithm, settings.cipherKey);
     var decodedToken = decipher.update(accessToken, settings.tokenEncoding, settings.plainEncoding);
     if (!decodedToken) return null;
-    decodedToken =  (decodedToken + decipher.final(settings.plainEncoding)).split(SEPARATOR);
-    decodedToken[2] = unserialize(decodedToken[2]);
+    decodedToken = (decodedToken + decipher.final(settings.plainEncoding));
+
+    decodedToken = unserialize(decodedToken);
     return decodedToken;
 }
 
@@ -67,13 +72,16 @@ exports.createAccessToken = function(settings, userId, timestamp, data) {
 
     if(!timestamp) timestamp = new Date().getTime();
     data = data || {};
-    var serializedData = serialize(data);
 
-    var firmedToken = firmAccessToken(settings, userId, timestamp, serializedData);
+    var firmedToken = firmAccessToken(settings, userId, timestamp, data);
 
     var cipher = crypto.createCipher(settings.cipherAlgorithm, settings.cipherKey);
-    var accessTokenSet = [userId, timestamp, serializedData, firmedToken];
-    var encodedData = cipher.update(accessTokenSet.join(SEPARATOR), settings.plainEncoding, settings.tokenEncoding);
+    var accessTokenSet = serialize({
+        'userId': userId,
+        'timestamp': timestamp,
+        'data': data
+    });
+    var encodedData = cipher.update(accessTokenSet, settings.plainEncoding, settings.tokenEncoding);
 
     return  standarizeToken(encodedData + cipher.final(settings.tokenEncoding));
 };
@@ -85,7 +93,11 @@ exports.getAccessTokenSet = function(settings, accessToken){
     if (!token){
         tokenSet.err = _ERRORS.badAccessToken;
     } else {
-        tokenSet = { userId : token[0], timestamp : token[1], data: token[2]};
+        tokenSet = {
+            userId : token.userId,
+            timestamp : token.timestamp,
+            data: token.data
+        };
     }
     return tokenSet;
 };
