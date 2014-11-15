@@ -31,3 +31,4 @@ DerivedData
 .DS_Store
 
 .idea
+src/test/coverage

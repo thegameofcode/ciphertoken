@@ -1,11 +1,12 @@
 var crypto = require('crypto');
 
 var _ERRORS = {
-    cipherKeyRequired : {err:'CipherKey required', des:'CipherKey parameter is mandatory'},
-    firmKeyRequired : {err:'FirmKey required',des:'FirmKey parameter is mandatory'},
-    badFirm : {err:'Bad firm',des:'Firm is not valid'},
-    badAccessToken : {err:'Bad accessToken', des:'AccessToken is not valid'},
-    accessTokenExpired : {err:'AccessToken expired',des:'AccessToken has expired and it must be renewed'},
+    settingsRequired: {err:'Settings required', des: 'Settings must have at least cipherKey and firmKey'},
+    cipherKeyRequired: {err: 'CipherKey required', des: 'CipherKey parameter is mandatory'},
+    firmKeyRequired: {err: 'FirmKey required',des: 'FirmKey parameter is mandatory'},
+    badFirm: {err: 'Bad firm',des: 'Firm is not valid'},
+    badAccessToken: {err: 'Bad accessToken', des: 'AccessToken is not valid'},
+    accessTokenExpired: {err: 'AccessToken expired',des: 'AccessToken has expired and it must be renewed'},
     serializationError: {err: 'Serialization error', des: 'Error during data serialization'},
     unserializationError: {err: 'Unserialization error', des: 'Error during data unserialization'}
 };
@@ -21,8 +22,19 @@ const DEFAULT_SETTINGS = {
 };
 
 function enrich_settings(settings){
+    if (typeof settings === 'undefined' || isEmpty(settings)){
+        throw _ERRORS.settingsRequired;
+    } else if (!settings.hasOwnProperty('cipherKey')) {
+        throw _ERRORS.cipherKeyRequired;
+    } else if (!settings.hasOwnProperty('firmKey')) {
+        throw _ERRORS.firmKeyRequired;
+    }
     for (var p in DEFAULT_SETTINGS) settings[p] = DEFAULT_SETTINGS[p];
     return settings;
+}
+
+function isEmpty(obj) {
+    return !Object.keys(obj).length > 0;
 }
 
 function serialize(data) {
@@ -50,11 +62,11 @@ function standarizeToken(token){
         ;
 }
 
-function firmAccessToken(settings, userId, timestamp, serializedData) {
+function firmAccessToken(settings, userId, timestamp, data) {
     var notFirmedToken = serialize({
         'userId': userId,
         'timestamp': timestamp,
-        'data': serializedData
+        'data': data
     });
     var firmedToken = crypto.createHmac(settings.hmacAlgorithm, settings.firmKey)
         .update(notFirmedToken)
@@ -117,4 +129,3 @@ exports.getAccessTokenSet = function(settings, accessToken){
     }
     return tokenSet;
 };
-
