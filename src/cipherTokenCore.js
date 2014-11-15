@@ -100,7 +100,6 @@ exports.createToken = function(settings, userId, data) {
     var tokenSet = {
         'userId': userId,
         'expiresAtTimestamp': expiresAtTimestamp,
-        'expiresIn': settings.tokenExpirationMinutes,
         'data': data,
         'firm': firm
     };
@@ -125,7 +124,6 @@ exports.getTokenSet = function(settings, cipheredToken){
         tokenSet = {
             userId : token.userId,
             expiresAtTimestamp : token.expiresAtTimestamp,
-            'expiresIn': token.expiresIn,
             data: token.data
         };
         if (settings.enableSessionId) {

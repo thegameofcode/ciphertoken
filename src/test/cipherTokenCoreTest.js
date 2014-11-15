@@ -57,19 +57,6 @@ describe('Token generation', function() {
 
         assert.equal(expectedRounded, actualRounded);
     });
-
-    it('Should return an expiresIn property', function () {
-        var customSettings = {
-            cipherKey: 'myCipherKey123',
-            firmKey: 'anotherFirmKey',
-            tokenExpirationMinutes : 5
-        };
-        var token = ctCore.createToken(customSettings, USER_ID, DATA);
-        var tokenSet = ctCore.getTokenSet(customSettings, token);
-
-        assert.notEqual(tokenSet.expiresIn, null);
-        assert.equal(tokenSet.expiresIn, customSettings.tokenExpirationMinutes);
-    });
 });
 
 describe('Error description', function () {
@@ -152,5 +139,4 @@ describe('SessionId support', function() {
 
         assert.notEqual(firstTokenSet.sessionId, secondTokenSet.sessionId);
     });
-
 });
