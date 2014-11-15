@@ -22,18 +22,38 @@ describe('Access token generation', function(){
     });
 
     it('Generated access token must be decoded back to get original data', function(){
-        var timestamp = new Date().getTime();
-        var accessToken = ctCore.createAccessToken(settings, USER_ID, timestamp, DATA);
+        var accessToken = ctCore.createAccessToken(settings, USER_ID, DATA);
         var accessTokenSet = ctCore.getAccessTokenSet(settings, accessToken);
 
         assert.notEqual(accessTokenSet, null);
         assert.equal(accessTokenSet.userId, USER_ID);
-        assert.equal(accessTokenSet.timestamp, timestamp);
         assert.deepEqual(accessTokenSet.data, DATA);
+    });
+
+    it('Should return an expiresInTimestamp', function () {
+        var accessToken = ctCore.createAccessToken(settings, USER_ID, DATA);
+        var accessTokenSet = ctCore.getAccessTokenSet(settings, accessToken);
+
+        assert.notEqual(accessTokenSet.expiresInTimestamp, null);
+    });
+
+    it('ExpiresInTimestamp should be greater than actual time according to settings', function () {
+        var customSettings = {
+            cipherKey: 'myCipherKey123',
+            firmKey: 'anotherFirmKey',
+            accessTokenExpirationMinutes : 2
+        };
+        var accessToken = ctCore.createAccessToken(customSettings, USER_ID, DATA);
+        var accessTokenSet = ctCore.getAccessTokenSet(customSettings, accessToken);
+        var expected = new Date().getTime() + customSettings.accessTokenExpirationMinutes*60*1000;
+        var expectedRounded = (expected/(60*1000)).toFixed();
+        var actualRounded = (accessTokenSet.expiresInTimestamp/(60*1000)).toFixed();
+
+        assert.equal(expectedRounded, actualRounded);
     });
 });
 
-describe.only('Error description', function () {
+describe('Error description', function () {
 
     it('Should return an error when submitted access token is invalid', function() {
         var accessToken = 'invalid access token';
@@ -53,9 +73,18 @@ describe.only('Error description', function () {
         assert.strictEqual(accessTokenSet.err.err, 'Bad firm');
     });
 
-    it('Should throw an error when trying to create an accessToken without settings', function () {
+    it('Should throw an error when trying to create an accessToken with empty settings', function () {
         try {
             ctCore.createAccessToken({}, USER_ID, new Date().getTime(), DATA);
+        } catch(err) {
+            assert.notEqual(err, null);
+            assert.strictEqual(err.err, 'Settings required');
+        }
+    });
+
+    it('Should throw an error when trying to create an accessToken with undefined settings', function () {
+        try {
+            ctCore.createAccessToken(undefined, USER_ID, new Date().getTime(), DATA);
         } catch(err) {
             assert.notEqual(err, null);
             assert.strictEqual(err.err, 'Settings required');

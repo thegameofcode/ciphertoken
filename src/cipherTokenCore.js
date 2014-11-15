@@ -62,10 +62,10 @@ function standarizeToken(token){
         ;
 }
 
-function firmAccessToken(settings, userId, timestamp, data) {
+function firmAccessToken(settings, userId, expiresInTimestamp, data) {
     var notFirmedToken = serialize({
         'userId': userId,
-        'timestamp': timestamp,
+        'expiresInTimestamp': expiresInTimestamp,
         'data': data
     });
     var firmedToken = crypto.createHmac(settings.hmacAlgorithm, settings.firmKey)
@@ -77,7 +77,7 @@ function firmAccessToken(settings, userId, timestamp, data) {
 function checkAccessTokenFirm(settings, accessToken){
     var accessTokenSet = decipherAccessToken(settings, accessToken);
 
-    var firm = firmAccessToken(settings, accessTokenSet.userId, accessTokenSet.timestamp, accessTokenSet.data);
+    var firm = firmAccessToken(settings, accessTokenSet.userId, accessTokenSet.expiresInTimestamp, accessTokenSet.data);
     return firm === accessTokenSet.firm;
 }
 
@@ -91,18 +91,18 @@ function decipherAccessToken (settings, accessToken){
     return decodedToken;
 }
 
-exports.createAccessToken = function(settings, userId, timestamp, data) {
+exports.createAccessToken = function(settings, userId, data) {
     settings = enrich_settings(settings);
 
-    if(!timestamp) timestamp = new Date().getTime();
+    var expiresInTimestamp = new Date().getTime() + settings.accessTokenExpirationMinutes*60*1000;
     data = data || {};
 
-    var firm = firmAccessToken(settings, userId, timestamp, data);
-
+    var firm = firmAccessToken(settings, userId, expiresInTimestamp, data);
     var cipher = crypto.createCipher(settings.cipherAlgorithm, settings.cipherKey);
+
     var accessTokenSet = serialize({
         'userId': userId,
-        'timestamp': timestamp,
+        'expiresInTimestamp': expiresInTimestamp,
         'data': data,
         'firm': firm
     });
@@ -123,7 +123,7 @@ exports.getAccessTokenSet = function(settings, accessToken){
     } else {
         tokenSet = {
             userId : token.userId,
-            timestamp : token.timestamp,
+            expiresInTimestamp : token.expiresInTimestamp,
             data: token.data
         };
     }
