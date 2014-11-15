@@ -1,12 +1,11 @@
 var crypto = require('crypto');
 
-var _ERRORS = {
+var ERRORS = {
     settingsRequired: {err:'Settings required', des: 'Settings must have at least cipherKey and firmKey'},
     cipherKeyRequired: {err: 'CipherKey required', des: 'CipherKey parameter is mandatory'},
     firmKeyRequired: {err: 'FirmKey required',des: 'FirmKey parameter is mandatory'},
     badFirm: {err: 'Bad firm',des: 'Firm is not valid'},
-    badAccessToken: {err: 'Bad accessToken', des: 'AccessToken is not valid'},
-    accessTokenExpired: {err: 'AccessToken expired',des: 'AccessToken has expired and it must be renewed'},
+    badToken: {err: 'Bad token', des: 'Token is not valid'},
     serializationError: {err: 'Serialization error', des: 'Error during data serialization'},
     unserializationError: {err: 'Unserialization error', des: 'Error during data unserialization'}
 };
@@ -17,17 +16,17 @@ const DEFAULT_SETTINGS = {
     hmacDigestEncoding : 'hex',
     plainEncoding : 'utf8',
     tokenEncoding : 'base64',
-    accessTokenExpirationMinutes : 90,
+    tokenExpirationMinutes : 90,
     enableSessionId: false
 };
 
 function enrich_settings(settings){
     if (typeof settings === 'undefined' || isEmpty(settings)){
-        throw _ERRORS.settingsRequired;
+        throw ERRORS.settingsRequired;
     } else if (!settings.hasOwnProperty('cipherKey')) {
-        throw _ERRORS.cipherKeyRequired;
+        throw ERRORS.cipherKeyRequired;
     } else if (!settings.hasOwnProperty('firmKey')) {
-        throw _ERRORS.firmKeyRequired;
+        throw ERRORS.firmKeyRequired;
     }
     for (var p in DEFAULT_SETTINGS) settings[p] = DEFAULT_SETTINGS[p];
     return settings;
@@ -41,8 +40,7 @@ function serialize(data) {
     try {
         return JSON.stringify(data);
     } catch (e) {
-        debug('Serialization error', e);
-        throw _ERRORS.serializationError;
+        throw ERRORS.serializationError;
     }
 }
 
@@ -50,7 +48,7 @@ function unserialize(data) {
     try {
         return JSON.parse(data);
     } catch (e) {
-        throw _ERRORS.unserializationError;
+        throw ERRORS.unserializationError;
     }
 }
 
@@ -62,7 +60,7 @@ function standarizeToken(token){
         ;
 }
 
-function firmAccessToken(settings, userId, expiresAtTimestamp, data) {
+function firmToken(settings, userId, expiresAtTimestamp, data) {
     var notFirmedToken = serialize({
         'userId': userId,
         'expiresAtTimestamp': expiresAtTimestamp,
@@ -74,16 +72,16 @@ function firmAccessToken(settings, userId, expiresAtTimestamp, data) {
     return firmedToken;
 }
 
-function checkAccessTokenFirm(settings, accessToken){
-    var accessTokenSet = decipherAccessToken(settings, accessToken);
+function checkTokenFirm(settings, cipheredToken){
+    var tokenSet = decipherToken(settings, cipheredToken);
 
-    var firm = firmAccessToken(settings, accessTokenSet.userId, accessTokenSet.expiresAtTimestamp, accessTokenSet.data);
-    return firm === accessTokenSet.firm;
+    var firm = firmToken(settings, tokenSet.userId, tokenSet.expiresAtTimestamp, tokenSet.data);
+    return firm === tokenSet.firm;
 }
 
-function decipherAccessToken (settings, accessToken){
+function decipherToken (settings, cipheredToken){
     var decipher = crypto.createDecipher(settings.cipherAlgorithm, settings.cipherKey);
-    var decodedToken = decipher.update(accessToken, settings.tokenEncoding, settings.plainEncoding);
+    var decodedToken = decipher.update(cipheredToken, settings.tokenEncoding, settings.plainEncoding);
     if (!decodedToken) return null;
     decodedToken = (decodedToken + decipher.final(settings.plainEncoding));
 
@@ -91,39 +89,39 @@ function decipherAccessToken (settings, accessToken){
     return decodedToken;
 }
 
-exports.createAccessToken = function(settings, userId, data) {
+exports.createToken = function(settings, userId, data) {
     settings = enrich_settings(settings);
 
-    var expiresAtTimestamp = new Date().getTime() + settings.accessTokenExpirationMinutes*60*1000;
+    var expiresAtTimestamp = new Date().getTime() + settings.tokenExpirationMinutes*60*1000;
     data = data || {};
 
-    var firm = firmAccessToken(settings, userId, expiresAtTimestamp, data);
+    var firm = firmToken(settings, userId, expiresAtTimestamp, data);
     var cipher = crypto.createCipher(settings.cipherAlgorithm, settings.cipherKey);
 
-    var accessTokenSet = {
+    var tokenSet = {
         'userId': userId,
         'expiresAtTimestamp': expiresAtTimestamp,
-        'expiresIn': settings.accessTokenExpirationMinutes,
+        'expiresIn': settings.tokenExpirationMinutes,
         'data': data,
         'firm': firm
     };
     if (settings.sessionId) {
-        accessTokenSet.sessionId = userId + '-' + crypto.pseudoRandomBytes(12).toString('hex');
+        tokenSet.sessionId = userId + '-' + crypto.pseudoRandomBytes(12).toString('hex');
     }
-    var encodedData = cipher.update(serialize(accessTokenSet), settings.plainEncoding, settings.tokenEncoding);
+    var encodedData = cipher.update(serialize(tokenSet), settings.plainEncoding, settings.tokenEncoding);
 
     return  standarizeToken(encodedData + cipher.final(settings.tokenEncoding));
 };
 
-exports.getAccessTokenSet = function(settings, accessToken){
+exports.getTokenSet = function(settings, cipheredToken){
     settings = enrich_settings(settings);
     var tokenSet = {};
 
-    var token = decipherAccessToken(settings, accessToken);
+    var token = decipherToken(settings, cipheredToken);
     if (!token){
-        tokenSet.err = _ERRORS.badAccessToken;
-    } else if(!checkAccessTokenFirm(settings, accessToken)){
-        tokenSet.err = _ERRORS.badFirm;
+        tokenSet.err = ERRORS.badToken;
+    } else if(!checkTokenFirm(settings, cipheredToken)){
+        tokenSet.err = ERRORS.badFirm;
     } else {
         tokenSet = {
             userId : token.userId,
