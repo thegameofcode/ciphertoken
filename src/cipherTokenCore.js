@@ -1,15 +1,5 @@
 var crypto = require('crypto');
 
-const DEFAULT_SETTINGS = {
-    cipherAlgorithm : 'aes-256-cbc',
-    hmacAlgorithm : 'md5',
-    hmacDigestEncoding : 'hex',
-    plainEncoding : 'utf8',
-    tokenEncoding : 'base64',
-    accessTokenExpirationMinutes : 90,
-    enableSessionId: false
-};
-
 var _ERRORS = {
     cipherKeyRequired : {err:'CipherKey required', des:'CipherKey parameter is mandatory'},
     firmKeyRequired : {err:'FirmKey required',des:'FirmKey parameter is mandatory'},
@@ -20,6 +10,21 @@ var _ERRORS = {
     unserializationError: {err: 'Unserialization error', des: 'Error during data unserialization'}
 };
 
+const DEFAULT_SETTINGS = {
+    cipherAlgorithm : 'aes-256-cbc',
+    hmacAlgorithm : 'md5',
+    hmacDigestEncoding : 'hex',
+    plainEncoding : 'utf8',
+    tokenEncoding : 'base64',
+    accessTokenExpirationMinutes : 90,
+    enableSessionId: false
+};
+
+function enrich_settings(settings){
+    for (var p in DEFAULT_SETTINGS) settings[p] = DEFAULT_SETTINGS[p];
+    return settings;
+}
+
 function serialize(data) {
     try {
         return JSON.stringify(data);
@@ -29,20 +34,20 @@ function serialize(data) {
     }
 }
 
-function standarizeToken(token){
-    return token.
-        replace(/\+/g, '-'). 	// Convert '+' to '-'
-        replace(/\//g, '_'). 	// Convert '/' to '_'
-        replace(/=+$/, '') 		// Remove ending '='
-        ;
-}
-
 function unserialize(data) {
     try {
         return JSON.parse(data);
     } catch (e) {
         throw _ERRORS.unserializationError;
     }
+}
+
+function standarizeToken(token){
+    return token.
+        replace(/\+/g, '-'). 	// Convert '+' to '-'
+        replace(/\//g, '_'). 	// Convert '/' to '_'
+        replace(/=+$/, '') 		// Remove ending '='
+        ;
 }
 
 function firmAccessToken(settings, userId, timestamp, serializedData) {
@@ -57,6 +62,13 @@ function firmAccessToken(settings, userId, timestamp, serializedData) {
     return firmedToken;
 }
 
+function checkAccessTokenFirm(settings, accessToken){
+    var accessTokenSet = decipherAccessToken(settings, accessToken);
+
+    var firm = firmAccessToken(settings, accessTokenSet.userId, accessTokenSet.timestamp, accessTokenSet.data);
+    return firm === accessTokenSet.firm;
+}
+
 function decipherAccessToken (settings, accessToken){
     var decipher = crypto.createDecipher(settings.cipherAlgorithm, settings.cipherKey);
     var decodedToken = decipher.update(accessToken, settings.tokenEncoding, settings.plainEncoding);
@@ -68,18 +80,19 @@ function decipherAccessToken (settings, accessToken){
 }
 
 exports.createAccessToken = function(settings, userId, timestamp, data) {
-    for (var p in DEFAULT_SETTINGS) settings[p] = DEFAULT_SETTINGS[p];
+    settings = enrich_settings(settings);
 
     if(!timestamp) timestamp = new Date().getTime();
     data = data || {};
 
-    var firmedToken = firmAccessToken(settings, userId, timestamp, data);
+    var firm = firmAccessToken(settings, userId, timestamp, data);
 
     var cipher = crypto.createCipher(settings.cipherAlgorithm, settings.cipherKey);
     var accessTokenSet = serialize({
         'userId': userId,
         'timestamp': timestamp,
-        'data': data
+        'data': data,
+        'firm': firm
     });
     var encodedData = cipher.update(accessTokenSet, settings.plainEncoding, settings.tokenEncoding);
 
@@ -87,11 +100,14 @@ exports.createAccessToken = function(settings, userId, timestamp, data) {
 };
 
 exports.getAccessTokenSet = function(settings, accessToken){
+    settings = enrich_settings(settings);
     var tokenSet = {};
 
     var token = decipherAccessToken(settings, accessToken);
     if (!token){
         tokenSet.err = _ERRORS.badAccessToken;
+    } else if(!checkAccessTokenFirm(settings, accessToken)){
+        tokenSet.err = _ERRORS.badFirm;
     } else {
         tokenSet = {
             userId : token.userId,

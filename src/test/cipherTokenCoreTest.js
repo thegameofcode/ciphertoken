@@ -9,7 +9,12 @@ var config = {
     firmKey:  'myFirmKey123'
 };
 
-describe.only('Access token generation', function(){
+var anotherConfig = {
+    cipherKey: 'myCipherKey123',
+    firmKey: 'anotherFirmKey'
+};
+
+describe('Access token generation', function(){
 
     it('Should generate access token', function(){
         var accessToken = ctCore.createAccessToken(config, USER_ID, new Date().getTime(), DATA);
@@ -34,5 +39,14 @@ describe.only('Access token generation', function(){
         assert.notEqual(accessTokenSet, null);
         assert.notEqual(accessTokenSet.err, null);
         assert.strictEqual(accessTokenSet.err.err, 'Bad accessToken');
+    });
+
+    it('Should return an error when trying to decode with invalid firm key', function(){
+        var accessToken = ctCore.createAccessToken(config, USER_ID, new Date().getTime(), DATA);
+        var accessTokenSet = ctCore.getAccessTokenSet(anotherConfig, accessToken);
+
+        assert.notEqual(accessTokenSet, null);
+        assert.notEqual(accessTokenSet.err, null);
+        assert.strictEqual(accessTokenSet.err.err, 'Bad firm');
     });
 });
