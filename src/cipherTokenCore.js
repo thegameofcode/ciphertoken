@@ -16,8 +16,7 @@ const DEFAULT_SETTINGS = {
     hmacDigestEncoding : 'hex',
     plainEncoding : 'utf8',
     tokenEncoding : 'base64',
-    tokenExpirationMinutes : 90,
-    enableSessionId: false
+    tokenExpirationMinutes : 90
 };
 
 function enrich_settings(settings){
@@ -105,7 +104,7 @@ exports.createToken = function(settings, userId, data) {
         'data': data,
         'firm': firm
     };
-    if (settings.sessionId) {
+    if (settings.enableSessionId) {
         tokenSet.sessionId = userId + '-' + crypto.pseudoRandomBytes(12).toString('hex');
     }
     var encodedData = cipher.update(serialize(tokenSet), settings.plainEncoding, settings.tokenEncoding);
@@ -129,7 +128,7 @@ exports.getTokenSet = function(settings, cipheredToken){
             'expiresIn': token.expiresIn,
             data: token.data
         };
-        if (settings.sessionId) {
+        if (settings.enableSessionId) {
             tokenSet.sessionId = token.sessionId
         }
     }

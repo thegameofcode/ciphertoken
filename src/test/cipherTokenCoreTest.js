@@ -12,7 +12,7 @@ var settings = {
 var settingsWithSessionId = {
     cipherKey: 'myCipherKey123',
     firmKey:  'myFirmKey123',
-    sessionId: true
+    enableSessionId: true
 };
 
 var anotherSettings = {
