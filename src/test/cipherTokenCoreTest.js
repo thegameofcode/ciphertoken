@@ -1,7 +1,7 @@
 var assert = require('assert');
 var ctCore = require('../cipherTokenCore');
 
-const USER_ID = 'userId';
+const USER_ID = 'John Spartan';
 const DATA = 'validData';
 
 var settings = {
@@ -9,19 +9,25 @@ var settings = {
     firmKey:  'myFirmKey123'
 };
 
+var settingsWithSessionId = {
+    cipherKey: 'myCipherKey123',
+    firmKey:  'myFirmKey123',
+    sessionId: true
+};
+
 var anotherSettings = {
     cipherKey: 'myCipherKey123',
     firmKey: 'anotherFirmKey'
 };
 
-describe('Access token generation', function(){
+describe('Access token generation', function() {
 
-    it('Should generate access token', function(){
+    it('Should generate access token', function() {
         var accessToken = ctCore.createAccessToken(settings, USER_ID, DATA);
         assert.notEqual(accessToken, null);
     });
 
-    it('Generated access token must be decoded back to get original data', function(){
+    it('Generated access token must be decoded back to get original data', function() {
         var accessToken = ctCore.createAccessToken(settings, USER_ID, DATA);
         var accessTokenSet = ctCore.getAccessTokenSet(settings, accessToken);
 
@@ -66,7 +72,7 @@ describe('Access token generation', function(){
     });
 });
 
-describe.only('Error description', function () {
+describe('Error description', function () {
 
     it('Should return an error when submitted access token is invalid', function() {
         var accessToken = 'invalid access token';
@@ -77,7 +83,7 @@ describe.only('Error description', function () {
         assert.strictEqual(accessTokenSet.err.err, 'Bad accessToken');
     });
 
-    it('Should return an error when trying to decode with invalid firm key', function(){
+    it('Should return an error when trying to decode with invalid firm key', function() {
         var accessToken = ctCore.createAccessToken(settings, USER_ID, DATA);
         var accessTokenSet = ctCore.getAccessTokenSet(anotherSettings, accessToken);
 
@@ -122,3 +128,31 @@ describe.only('Error description', function () {
         }
     });
 });
+
+describe('SessionId support', function() {
+    it('Access token should have a sessionId when enabled', function() {
+        var accessToken = ctCore.createAccessToken(settingsWithSessionId, USER_ID, DATA);
+        var accessTokenSet = ctCore.getAccessTokenSet(settingsWithSessionId, accessToken);
+
+        assert.notEqual(accessTokenSet.sessionId, null);
+    });
+
+    it('By default, access token creations do not include session ids', function () {
+        var accessToken = ctCore.createAccessToken(settings, USER_ID, DATA);
+        var accessTokenSet = ctCore.getAccessTokenSet(settings, accessToken);
+
+        assert.equal(accessTokenSet.sessionId, null);
+    });
+
+    it('Session ids should be different for different access tokens', function() {
+        var firstAccessToken = ctCore.createAccessToken(settingsWithSessionId, 'first user', DATA);
+        var firstAccessTokenSet = ctCore.getAccessTokenSet(settingsWithSessionId, firstAccessToken);
+        var secondAccessToken = ctCore.createAccessToken(settingsWithSessionId, 'second user', DATA);
+        var secondAccessTokenSet = ctCore.getAccessTokenSet(settingsWithSessionId, secondAccessToken);
+
+        assert.notEqual(firstAccessTokenSet.sessionId, secondAccessTokenSet.sessionId);
+    });
+
+});
+
+// TODO: refresh tokens

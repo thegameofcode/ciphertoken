@@ -100,14 +100,17 @@ exports.createAccessToken = function(settings, userId, data) {
     var firm = firmAccessToken(settings, userId, expiresAtTimestamp, data);
     var cipher = crypto.createCipher(settings.cipherAlgorithm, settings.cipherKey);
 
-    var accessTokenSet = serialize({
+    var accessTokenSet = {
         'userId': userId,
         'expiresAtTimestamp': expiresAtTimestamp,
         'expiresIn': settings.accessTokenExpirationMinutes,
         'data': data,
         'firm': firm
-    });
-    var encodedData = cipher.update(accessTokenSet, settings.plainEncoding, settings.tokenEncoding);
+    };
+    if (settings.sessionId) {
+        accessTokenSet.sessionId = userId + '-' + crypto.pseudoRandomBytes(12).toString('hex');
+    }
+    var encodedData = cipher.update(serialize(accessTokenSet), settings.plainEncoding, settings.tokenEncoding);
 
     return  standarizeToken(encodedData + cipher.final(settings.tokenEncoding));
 };
@@ -128,6 +131,9 @@ exports.getAccessTokenSet = function(settings, accessToken){
             'expiresIn': token.expiresIn,
             data: token.data
         };
+        if (settings.sessionId) {
+            tokenSet.sessionId = token.sessionId
+        }
     }
     return tokenSet;
 };
