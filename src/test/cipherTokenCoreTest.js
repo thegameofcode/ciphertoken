@@ -30,11 +30,11 @@ describe('Access token generation', function(){
         assert.deepEqual(accessTokenSet.data, DATA);
     });
 
-    it('Should return an expiresInTimestamp', function () {
+    it('Should return an expiresAtTimestamp', function () {
         var accessToken = ctCore.createAccessToken(settings, USER_ID, DATA);
         var accessTokenSet = ctCore.getAccessTokenSet(settings, accessToken);
 
-        assert.notEqual(accessTokenSet.expiresInTimestamp, null);
+        assert.notEqual(accessTokenSet.expiresAtTimestamp, null);
     });
 
     it('ExpiresInTimestamp should be greater than actual time according to settings', function () {
@@ -47,9 +47,22 @@ describe('Access token generation', function(){
         var accessTokenSet = ctCore.getAccessTokenSet(customSettings, accessToken);
         var expected = new Date().getTime() + customSettings.accessTokenExpirationMinutes*60*1000;
         var expectedRounded = (expected/(60*1000)).toFixed();
-        var actualRounded = (accessTokenSet.expiresInTimestamp/(60*1000)).toFixed();
+        var actualRounded = (accessTokenSet.expiresAtTimestamp/(60*1000)).toFixed();
 
         assert.equal(expectedRounded, actualRounded);
+    });
+
+    it('Should return an expiresIn property', function () {
+        var customSettings = {
+            cipherKey: 'myCipherKey123',
+            firmKey: 'anotherFirmKey',
+            accessTokenExpirationMinutes : 5
+        };
+        var accessToken = ctCore.createAccessToken(customSettings, USER_ID, DATA);
+        var accessTokenSet = ctCore.getAccessTokenSet(customSettings, accessToken);
+
+        assert.notEqual(accessTokenSet.expiresIn, null);
+        assert.equal(accessTokenSet.expiresIn, customSettings.accessTokenExpirationMinutes);
     });
 });
 
