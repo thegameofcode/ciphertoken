@@ -37,7 +37,6 @@ function enrich_settings(settings, ckb){
         }
     }
     ckb(null, settings);
-    return;
 }
 
 function isEmpty(obj) {
@@ -101,7 +100,6 @@ exports.createToken = function(settings, userId, data, callback) {
     enrich_settings(settings, function(err, settings){
         if(err){
             callback(err);
-            return;
         } else {
 
             var expiresAtTimestamp = new Date().getTime() + settings.tokenExpirationMinutes*60*1000;
@@ -122,7 +120,6 @@ exports.createToken = function(settings, userId, data, callback) {
             var encodedData = cipher.update(serialize(tokenSet), settings.plainEncoding, settings.tokenEncoding);
 
             callback(null, standarizeToken(encodedData + cipher.final(settings.tokenEncoding)));
-            return;
         }
     });
 
@@ -132,7 +129,7 @@ exports.getTokenSet = function(settings, cipheredToken, callback){
     enrich_settings(settings, function(err, settings){
         if (err) {
             callback(err);
-            return;
+
         } else {
             var tokenSet = {};
 
@@ -154,8 +151,6 @@ exports.getTokenSet = function(settings, cipheredToken, callback){
                 }
             }
             callback(null, tokenSet);
-            return;
         }
     });
-
 };
