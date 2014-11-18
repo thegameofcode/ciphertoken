@@ -163,3 +163,5 @@ describe('SessionId support', function() {
 
     //TODO: create tokens with a given session id
 });
+
+// TODO: test serialization & unserialization

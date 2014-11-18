@@ -20,7 +20,7 @@ const DEFAULT_SETTINGS = {
     enableSessionId: false
 };
 
-function enrich_settings(settings, ckb){
+function enrichSettings(settings, ckb){
     if (typeof settings === 'undefined' || isEmpty(settings)){
         return ckb(ERRORS.settingsRequired);
     } else if (!settings.hasOwnProperty('cipherKey')) {
@@ -94,7 +94,7 @@ function decipherToken (settings, cipheredToken){
 }
 
 function createToken(settings, userId, data, callback) {
-    enrich_settings(settings, function(err, settings){
+    enrichSettings(settings, function(err, settings){
         if(err){
             callback(err);
         } else {
@@ -120,10 +120,10 @@ function createToken(settings, userId, data, callback) {
         }
     });
 
-};
+}
 
 function getTokenSet(settings, cipheredToken, callback){
-    enrich_settings(settings, function(err, settings){
+    enrichSettings(settings, function(err, settings){
         if (err) {
             callback(err);
 
@@ -148,9 +148,13 @@ function getTokenSet(settings, cipheredToken, callback){
             callback(null, tokenSet);
         }
     });
-};
+}
 
 module.exports = {
     createToken: createToken,
     getTokenSet: getTokenSet
 };
+
+// TODO: Adapt private methods to the callback-error first pattern
+// TODO: Extract getTokenSet & createToken initialization with enrichSettings and err returning to avoid code duplication
+// TODO: Use jwt instead of crypto for token encoding
