@@ -22,14 +22,11 @@ const DEFAULT_SETTINGS = {
 
 function enrich_settings(settings, ckb){
     if (typeof settings === 'undefined' || isEmpty(settings)){
-        ckb(ERRORS.settingsRequired);
-        return;
+        return ckb(ERRORS.settingsRequired);
     } else if (!settings.hasOwnProperty('cipherKey')) {
-        ckb(ERRORS.cipherKeyRequired);
-        return;
+        return ckb(ERRORS.cipherKeyRequired);
     } else if (!settings.hasOwnProperty('firmKey')) {
-        ckb(ERRORS.firmKeyRequired);
-        return;
+        return ckb(ERRORS.firmKeyRequired);
     }
     for (var p in DEFAULT_SETTINGS){
         if (settings.hasOwnProperty(p) == false) {
@@ -96,7 +93,7 @@ function decipherToken (settings, cipheredToken){
     return decodedToken;
 }
 
-exports.createToken = function(settings, userId, data, callback) {
+function createToken(settings, userId, data, callback) {
     enrich_settings(settings, function(err, settings){
         if(err){
             callback(err);
@@ -125,7 +122,7 @@ exports.createToken = function(settings, userId, data, callback) {
 
 };
 
-exports.getTokenSet = function(settings, cipheredToken, callback){
+function getTokenSet(settings, cipheredToken, callback){
     enrich_settings(settings, function(err, settings){
         if (err) {
             callback(err);
@@ -135,11 +132,9 @@ exports.getTokenSet = function(settings, cipheredToken, callback){
 
             var token = decipherToken(settings, cipheredToken);
             if (!token){
-                callback(ERRORS.badToken);
-                return;
+                return callback(ERRORS.badToken);
             } else if(!checkTokenFirm(settings, cipheredToken)){
-                callback(ERRORS.badFirm);
-                return;
+                return callback(ERRORS.badFirm);
             } else {
                 tokenSet = {
                     userId : token.userId,
@@ -153,4 +148,9 @@ exports.getTokenSet = function(settings, cipheredToken, callback){
             callback(null, tokenSet);
         }
     });
+};
+
+module.exports = {
+    createToken: createToken,
+    getTokenSet: getTokenSet
 };
