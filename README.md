@@ -14,90 +14,100 @@ A method to create ciphered accessToken based on the following principles:
 ### Require
 
 ```js
-var ciphertoken = require('ciphertoken');
+var cipherToken = require('cipherToken');
 ```
 
-### Creation
+### Usage
 
-#### Parameters
-- __CIPHER_KEY__ : (required) used to cipher the accessToken
-- __FIRM_KEY__ : (required) used to firm the accessToken
-- __options__ : (options) object with options to set up
-- __options.accessTokenExpirationMinutes__ : minutes of accessToken life (__90__ minutes by default)
-- __options.cipher_algorithm__ : algorithm used to cipher the token (__aes-256-cbc__ by default)
-- __options.hmac_algorithm__ : algorithm used to build the hmac (__md5__ by default)
-- __options.hmac_digest_encoding__ : encoding used in the outbound of the hmac digest (__hex__ by default)
-- __options.plain_encoding__ : encoding used in the data content in the token (__utf8__ by default)
-- __options.token_encoding__ : encoding used in the token format (__base64__ by default)
-- __options.enableSessionId__ : sessionId of an accessToken, can be preset at accessToken creation
+cipherToken is designed to be used as a module.
+
+Tokens are created this way
 
 ```js
-var cToken = ciphertoken.create(CIPHER_KEY,FIRM_KEY[,options]);
+cipherToken.createToken(settings, user_id, session_id, data, function(err, token){});
 ```
 
-### Methods
-- __createRefreshToken()__ : returns a randomBytes encodes to the RFC 4648 Spec
-- __createAccessToken(CONSUMMER_ID,TIMESTAMP, [DATA])__ : returns a ciphered and firmed accessToken
-- __getAccessTokenSet(ACCESS_TOKEN)__ : returns an array with the consumerId and timestamp, this method check the firm authenticity and the timestamp expiration (90 minutes by default), force can be used to return the accessToken in any case
-- __getAccessTokenExpiration(ACCESS_TOKEN)__ : returns an object with property 'expired'. This property is true when timestamp is expired and false when is valid. Although, returns 'err' property if the firm fails.
 
+and can be decoded back to a more readable state with
+
+
+```js
+cipherToken.getTokenSet(settings, token, function(err, tokenSet){});
+```
+
+
+#### Settings
+
+Settings is a hash with the following properties
+
+- __cipherKey__ : (required) used to cipher the accessToken
+- __firmKey__ : (required) used to firm the accessToken
+- __tokenExpirationMinutes__ : minutes of accessToken life (__90__ minutes by default)
+- __cipherAlgorithm__ : algorithm used to cipher the token (__aes-256-cbc__ by default)
+- __hmacAlgorithm__ : algorithm used to build the hmac (__md5__ by default)
+- __hmacDigestEncoding__ : encoding used in the outbound of the hmac digest (__hex__ by default)
+- __plainEncoding__ : encoding used in the data content in the token (__utf8__ by default)
+- __tokenEncoding__ : encoding used in the token format (__base64__ by default)
+- __enableSessionId__ : sessionId of an accessToken, can be preset at accessToken creation
+
+Settings must be passed to cipherToken in each call. Only cipherKey and firmKey are required.
+
+
+### Method: createToken
+
+```js
+cipherToken.createToken(settings, user_id, session_id, data, function(err, token){});
+```
+
+To create a token the first thing you need to do is to define your settings.
+UserId can be an username or any other thing you use to identify your clients.
+SessionId is only when you want to create a token associated to the same session of another token (usually near expiration).
+SessionId can be null.
+Data is to encode the payload you want to travel with the token.
+
+cipherToken.createToken expects a callback in the error-result form.
+
+
+
+### Method: getTokenSet
+
+```js
+cipherToken.getTokenSet(settings, token, function(err, tokenSet){});
+```
+
+Same settings of creation must be provided in order to decode the token.
+
+tokenSet has the following properties
+
+- userId: the same as the provided one
+- expiresAtTimestamp: at creation, gets the actual time and add to it the time expiration to calculate when will the token expire.
+Cipher token doesn't care if the token has expired or not.
+- data: same as provided
+- sessionId: (if enabled) random the first time, after that previous one can be used
 
 ### Example
 
-```js
+```js 
+var userId = 'John Spartan';
+var data = 'validData';
 
-var CIPHER_KEY = 'MyCipherKey123';
-var FIRM_KEY = 'MyFirmKey123'
-var cToken = ciphertoken.create(CIPHER_KEY,FIRM_KEY);
+var settings = {
+    cipherKey: 'myCipherKey123',
+    firmKey:  'myFirmKey123'
+};
 
-function newUser(callback){
-  var user = { id:1, refreshToken:cToken.refreshToken() };
-  db.save(user,callback);
+var cipherToken = require('cipherToken');
+
+cipherToken.createToken(settings, userId, null, data, doWhateverYouWantWithYourToken);
+function doWhateverYouWantWithYourToken(err, token){
+
 }
 
-function createUserAccess(userId,callback){
-  db.get({id:userId},function(err,userDb){
-    // data can be any object that could be serialized with JSON.stringify()
-    var data = {
-       name: userDb.name,
-       access_permissions: userDb.access_permissions
-    };
-    callback(err,{accessToken : cToken.createAccessToken(userDb.id,new Date().getTime(), data) );
-  });
-}
-
-function getUserIdByAccessToken(accessToken){
-  var accessTokenSet = cToken.getAccessTokenSet(accessToken);
-  return accessTokenSet.consummerId; // userId
-}
-
-function getUserDataByAccessToken(accessToken){
-  var accessTokenSet = cToken.getAccessTokenSet(accessToken);
-  return accessTokenSet.data; // userData
-}
-
-function getSessionIdByAccessToken(accessToken){
-  var accessTokenSet = cToken.getAccessTokenSet(accessToken);
-  return accessTokenSet.sessionId; //sessionId
-}
-
-function renewAccessTokenIfExpired(accessToken){
-  if ( !cToken.getAccessTokenExpiration(accessToken).expired ){
-    return accessToken; 
-  }
-  else {
-    return cToken.createAccessToken(getUserIdByAccessToken(accessToken),new Date().getTime(), getUserDataByAccessToken(accessToken))
-  }
-}
-
-function renewAccessTokenWithSessionId(accessToken){
-  var userId = getUserIdByAccessToken(accessToken),
-      date = new Date().getTime(),
-      data = getUserDataByAccessToken(accessToken),
-      sessionId = getSessionIdByAccessToken(accessToken);
-
-  return cToken.createAccessToken(userId, date, data, sessionId);
-}
+cipherToken.getTokenSet(settings, validToken, function(err, tokenSet){
+    console.log(tokenSet.userId);
+    console.log(tokenSet.data);
+    console.log(tokenSet.expiresAtTimestamp);
+});
 
 ```
 

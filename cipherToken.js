@@ -81,7 +81,7 @@ function standarizeToken(token){
     return token.
         replace(/\+/g, '-'). 	// Convert '+' to '-'
         replace(/\//g, '_'). 	// Convert '/' to '_'
-        replace(/=+$/, '') 		// Remove ending '='
+        replace(/=+$/, '')      // Remove ending '='
     ;
 }
 
