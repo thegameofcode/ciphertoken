@@ -1,23 +1,44 @@
 var crypto = require('crypto');
 
 var ERRORS = {
-    settingsRequired: {err:'Settings required', des: 'Settings must have at least cipherKey and firmKey'},
-    cipherKeyRequired: {err: 'CipherKey required', des: 'CipherKey parameter is mandatory'},
-    firmKeyRequired: {err: 'FirmKey required',des: 'FirmKey parameter is mandatory'},
-    badFirm: {err: 'Bad firm',des: 'Firm is not valid'},
-    badToken: {err: 'Bad token', des: 'Token is not valid'},
-    serializationError: {err: 'Serialization error', des: 'Error during data serialization'},
-    unserializationError: {err: 'Unserialization error', des: 'Error during data unserialization'}
+    settingsRequired: {
+        err: 'Settings required',
+        des: 'Settings must have at least cipherKey and firmKey'
+    },
+    cipherKeyRequired: {
+        err: 'CipherKey required',
+        des: 'CipherKey parameter is mandatory'
+    },
+    firmKeyRequired: {
+        err: 'FirmKey required',
+        des: 'FirmKey parameter is mandatory'
+    },
+    badFirm: {
+        err: 'Bad firm',
+        des: 'Firm is not valid'
+    },
+    badToken: {
+        err: 'Bad token',
+        des: 'Token is not valid'
+    },
+    serializationError: {
+        err: 'Serialization error',
+        des: 'Error during data serialization'
+    },
+    unserializationError: {
+        err: 'Unserialization error',
+        des: 'Error during data unserialization'
+    }
 };
 
 const DEFAULT_SETTINGS = {
-    cipherAlgorithm : 'aes-256-cbc',
-    hmacAlgorithm : 'md5',
-    hmacDigestEncoding : 'hex',
-    plainEncoding : 'utf8',
-    tokenEncoding : 'base64',
-    tokenExpirationMinutes : 90,
-    enableSessionId: false
+      cipherAlgorithm:          'aes-256-cbc',
+      hmacAlgorithm:            'md5',
+      hmacDigestEncoding:       'hex',
+      plainEncoding:            'utf8',
+      tokenEncoding:            'base64',
+      tokenExpirationMinutes:   90,
+      enableSessionId:          false
 };
 
 function enrichSettings(settings, ckb){
@@ -105,10 +126,10 @@ function createToken(settings, userId, sessionId, data, callback) {
         var cipher = crypto.createCipher(settings.cipherAlgorithm, settings.cipherKey);
 
         var tokenSet = {
-            'userId': userId,
-            'expiresAtTimestamp': expiresAtTimestamp,
-            'data': data,
-            'firm': firm
+            'userId':               userId,
+            'expiresAtTimestamp':   expiresAtTimestamp,
+            'data':                 data,
+            'firm':                 firm
         };
         if (settings.enableSessionId) {
             if (sessionId == null) {
