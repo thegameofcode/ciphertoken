@@ -93,7 +93,7 @@ function decipherToken (settings, cipheredToken){
     return decodedToken;
 }
 
-function createToken(settings, userId, data, callback) {
+function createToken(settings, userId, sessionId, data, callback) {
     enrichSettings(settings, function(err, settings){
         if(err){
             callback(err);
@@ -112,7 +112,11 @@ function createToken(settings, userId, data, callback) {
                 'firm': firm
             };
             if (settings.enableSessionId) {
-                tokenSet.sessionId = userId + '-' + crypto.pseudoRandomBytes(12).toString('hex');
+                if (sessionId == null) {
+                    tokenSet.sessionId = userId + '-' + crypto.pseudoRandomBytes(12).toString('hex');
+                } else {
+                    tokenSet.sessionId = sessionId;
+                }
             }
             var encodedData = cipher.update(serialize(tokenSet), settings.plainEncoding, settings.tokenEncoding);
 

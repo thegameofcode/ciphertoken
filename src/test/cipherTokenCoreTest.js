@@ -23,14 +23,14 @@ var anotherSettings = {
 describe('Token generation', function() {
 
     it('Should generate tokens', function() {
-        ctCore.createToken(settings, USER_ID, DATA, function(err, token){
+        ctCore.createToken(settings, USER_ID, null, DATA, function(err, token){
             assert.equal(err, null);
             assert.notEqual(token, null);
         });
     });
 
     it('Generated token must be decoded back to get original data', function() {
-        ctCore.createToken(settings, USER_ID, DATA, function(err, token){
+        ctCore.createToken(settings, USER_ID, null, DATA, function(err, token){
             ctCore.getTokenSet(settings, token, checkTokenSet);
         });
         function checkTokenSet(err, tokenSet){
@@ -41,7 +41,7 @@ describe('Token generation', function() {
     });
 
     it('Should return an expiresAtTimestamp', function () {
-        ctCore.createToken(settings, USER_ID, DATA, function(err, token){
+        ctCore.createToken(settings, USER_ID, null, DATA, function(err, token){
             ctCore.getTokenSet(settings, token, checkTokenSet);
         });
         function checkTokenSet(err, tokenSet){
@@ -55,7 +55,7 @@ describe('Token generation', function() {
             firmKey: 'anotherFirmKey',
             tokenExpirationMinutes : 2
         };
-        ctCore.createToken(customSettings, USER_ID, DATA, function(err, token) {
+        ctCore.createToken(customSettings, USER_ID, null, DATA, function(err, token) {
             ctCore.getTokenSet(customSettings, token, checkTokenSet);
         });
         function checkTokenSet(err, tokenSet){
@@ -83,7 +83,7 @@ describe('Error description', function () {
     });
 
     it('Should return an error when trying to decode with invalid firm key', function() {
-        ctCore.createToken(settings, USER_ID, DATA, function(err, token){
+        ctCore.createToken(settings, USER_ID, null, DATA, function(err, token){
             ctCore.getTokenSet(anotherSettings, token, checkTokenSet);
         });
         function checkTokenSet(err, tokenSet){
@@ -94,28 +94,28 @@ describe('Error description', function () {
     });
 
     it('Should return an error when trying to create a token with empty settings', function () {
-        ctCore.createToken({}, USER_ID, DATA, function(err){
+        ctCore.createToken({}, USER_ID, null, DATA, function(err){
             assert.notEqual(err, null);
             assert.strictEqual(err.err, 'Settings required');
         });
     });
 
     it('Should return an error when trying to create a token with undefined settings', function () {
-        ctCore.createToken(undefined, USER_ID, DATA, function(err){
+        ctCore.createToken(undefined, USER_ID, null, DATA, function(err){
             assert.notEqual(err, null);
             assert.strictEqual(err.err, 'Settings required');
         });
     });
 
-    it('Should throw an error when cipherKey is missing', function () {
-        ctCore.createToken({'firmKey': 'firmKey1234'}, USER_ID, DATA, function(err){
+    it('Should return an error when cipherKey is missing', function () {
+        ctCore.createToken({'firmKey': 'firmKey1234'}, USER_ID, null, DATA, function(err){
             assert.notEqual(err, null);
             assert.strictEqual(err.err, 'CipherKey required');
         });
     });
 
-    it('Should throw an error when firmKey is missing', function () {
-        ctCore.createToken({'cipherKey': 'cipherKey1234'}, USER_ID, DATA, function(err){
+    it('Should return an error when firmKey is missing', function () {
+        ctCore.createToken({'cipherKey': 'cipherKey1234'}, USER_ID, null, DATA, function(err){
             assert.notEqual(err, null);
             assert.strictEqual(err.err, 'FirmKey required');
         });
@@ -125,7 +125,7 @@ describe('Error description', function () {
 describe('SessionId support', function() {
     it('Token should have a sessionId when enabled', function() {
 
-        ctCore.createToken(settingsWithSessionId, USER_ID, DATA, function(err, token){
+        ctCore.createToken(settingsWithSessionId, USER_ID, null, DATA, function(err, token){
             ctCore.getTokenSet(settingsWithSessionId, token, checkTokenSet);
         });
         function checkTokenSet(err, tokenSet){
@@ -135,7 +135,7 @@ describe('SessionId support', function() {
 
 
     it('By default, token creation do not include session ids', function () {
-        ctCore.createToken(settings, USER_ID, DATA, function(err, token){
+        ctCore.createToken(settings, USER_ID, null, DATA, function(err, token){
             ctCore.getTokenSet(settings, token, checkTokenSet);
         });
         function checkTokenSet(err, tokenSet){
@@ -147,12 +147,12 @@ describe('SessionId support', function() {
         var firstSessionId = '';
         var secondSessionId = '';
 
-        ctCore.createToken(settingsWithSessionId, 'first user', DATA, function(err, token){
+        ctCore.createToken(settingsWithSessionId, 'first user', null, DATA, function(err, token){
             ctCore.getTokenSet(settingsWithSessionId, token, function(err, tokenSet){
                 firstSessionId = tokenSet.sessionId;
             })
         });
-        ctCore.createToken(settingsWithSessionId, 'second user', DATA, function (err, token) {
+        ctCore.createToken(settingsWithSessionId, 'second user', null, DATA, function (err, token) {
             ctCore.getTokenSet(settingsWithSessionId, token, function (err, tokenSet) {
                 secondSessionId = tokenSet.sessionId;
             })
@@ -161,7 +161,18 @@ describe('SessionId support', function() {
         assert.notEqual(firstSessionId, secondSessionId);
     });
 
+    it('New token can be created with a given sessionId', function(){
+        var sessionId = 'abc123456';
+        ctCore.createToken(settingsWithSessionId, USER_ID, sessionId, DATA, function(err, token){
+            ctCore.getTokenSet(settingsWithSessionId, token, checkTokenSet);
+        });
+        function checkTokenSet(err, tokenSet){
+            assert.equal(err, null);
+            assert.equal(tokenSet.sessionId, sessionId)
+        }
+    });
     //TODO: create tokens with a given session id
 });
+
 
 // TODO: test serialization & unserialization
