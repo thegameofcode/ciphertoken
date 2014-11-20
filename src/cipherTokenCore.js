@@ -96,61 +96,56 @@ function decipherToken (settings, cipheredToken){
 function createToken(settings, userId, sessionId, data, callback) {
     enrichSettings(settings, function(err, settings){
         if(err){
-            callback(err);
-        } else {
-
-            var expiresAtTimestamp = new Date().getTime() + settings.tokenExpirationMinutes*60*1000;
-            data = data || {};
-
-            var firm = firmToken(settings, userId, expiresAtTimestamp, data);
-            var cipher = crypto.createCipher(settings.cipherAlgorithm, settings.cipherKey);
-
-            var tokenSet = {
-                'userId': userId,
-                'expiresAtTimestamp': expiresAtTimestamp,
-                'data': data,
-                'firm': firm
-            };
-            if (settings.enableSessionId) {
-                if (sessionId == null) {
-                    tokenSet.sessionId = userId + '-' + crypto.pseudoRandomBytes(12).toString('hex');
-                } else {
-                    tokenSet.sessionId = sessionId;
-                }
-            }
-            var encodedData = cipher.update(serialize(tokenSet), settings.plainEncoding, settings.tokenEncoding);
-
-            callback(null, standarizeToken(encodedData + cipher.final(settings.tokenEncoding)));
+            return callback(err);
         }
-    });
+        var expiresAtTimestamp = new Date().getTime() + settings.tokenExpirationMinutes*60*1000;
+        data = data || {};
 
+        var firm = firmToken(settings, userId, expiresAtTimestamp, data);
+        var cipher = crypto.createCipher(settings.cipherAlgorithm, settings.cipherKey);
+
+        var tokenSet = {
+            'userId': userId,
+            'expiresAtTimestamp': expiresAtTimestamp,
+            'data': data,
+            'firm': firm
+        };
+        if (settings.enableSessionId) {
+            if (sessionId == null) {
+                tokenSet.sessionId = userId + '-' + crypto.pseudoRandomBytes(12).toString('hex');
+            } else {
+                tokenSet.sessionId = sessionId;
+            }
+        }
+        var encodedData = cipher.update(serialize(tokenSet), settings.plainEncoding, settings.tokenEncoding);
+
+        return callback(null, standarizeToken(encodedData + cipher.final(settings.tokenEncoding)));
+    });
 }
 
 function getTokenSet(settings, cipheredToken, callback){
     enrichSettings(settings, function(err, settings){
         if (err) {
-            callback(err);
-
-        } else {
-            var tokenSet = {};
-
-            var token = decipherToken(settings, cipheredToken);
-            if (!token){
-                return callback(ERRORS.badToken);
-            } else if(!checkTokenFirm(settings, cipheredToken)){
-                return callback(ERRORS.badFirm);
-            } else {
-                tokenSet = {
-                    userId : token.userId,
-                    expiresAtTimestamp : token.expiresAtTimestamp,
-                    data: token.data
-                };
-                if (settings.enableSessionId) {
-                    tokenSet.sessionId = token.sessionId
-                }
-            }
-            callback(null, tokenSet);
+            return callback(err);
         }
+        var tokenSet = {};
+
+        var token = decipherToken(settings, cipheredToken);
+        if (!token){
+            return callback(ERRORS.badToken);
+        } else if(!checkTokenFirm(settings, cipheredToken)){
+            return callback(ERRORS.badFirm);
+        } else {
+            tokenSet = {
+                userId : token.userId,
+                expiresAtTimestamp : token.expiresAtTimestamp,
+                data: token.data
+            };
+            if (settings.enableSessionId) {
+                tokenSet.sessionId = token.sessionId
+            }
+        }
+        return callback(null, tokenSet);
     });
 }
 
@@ -159,6 +154,4 @@ module.exports = {
     getTokenSet: getTokenSet
 };
 
-// TODO: Adapt private methods to the callback-error first pattern
-// TODO: Extract getTokenSet & createToken initialization with enrichSettings and err returning to avoid code duplication
 // TODO: Use jwt instead of crypto for token encoding

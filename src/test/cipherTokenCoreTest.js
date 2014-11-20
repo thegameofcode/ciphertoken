@@ -171,7 +171,6 @@ describe('SessionId support', function() {
             assert.equal(tokenSet.sessionId, sessionId)
         }
     });
-    //TODO: create tokens with a given session id
 });
 
 
