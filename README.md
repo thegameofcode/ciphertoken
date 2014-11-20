@@ -87,16 +87,16 @@ Cipher token doesn't care if the token has expired or not.
 
 ### Example
 
-```js 
-var userId = 'John Spartan';
-var data = 'validData';
+```js
+var cipherToken = require('cipherToken');
 
 var settings = {
     cipherKey: 'myCipherKey123',
     firmKey:  'myFirmKey123'
 };
 
-var cipherToken = require('cipherToken');
+var userId = 'John Spartan';
+var data = 'validData';
 
 cipherToken.createToken(settings, userId, null, data, doWhateverYouWantWithYourToken);
 function doWhateverYouWantWithYourToken(err, token){
