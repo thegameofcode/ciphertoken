@@ -82,7 +82,7 @@ function standarizeToken(token){
         replace(/\+/g, '-'). 	// Convert '+' to '-'
         replace(/\//g, '_'). 	// Convert '/' to '_'
         replace(/=+$/, '') 		// Remove ending '='
-        ;
+    ;
 }
 
 function firmToken(settings, userId, expiresAtTimestamp, data) {

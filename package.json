@@ -2,10 +2,9 @@
   "name": "ciphertoken",
   "version": "0.0.4",
   "description": "Ciphered accessToken management",
-  "main": "src/ciphertoken.js",
+  "main": "cipherToken.js",
   "scripts": {
-    "test": "DEBUG=ciphertoken* mocha src/test/*",
-    "perf": "DEBUG=ciphertoken* node src/perf/*"
+    "test": "mocha test/*"
   },
   "repository": {
     "type": "git",
