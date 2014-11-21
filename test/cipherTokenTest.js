@@ -2,7 +2,7 @@ var assert = require('assert');
 var cipherToken = require('../cipherToken');
 
 const USER_ID = 'John Spartan';
-const DATA = 'validData';
+const DATA = {field1:'a1b2c3d4e5f6'};
 
 var settings = {
     cipherKey: 'myCipherKey123',
@@ -31,22 +31,21 @@ describe('Token generation', function() {
 
     it('Generated token must be decoded back to get original data', function() {
         cipherToken.createToken(settings, USER_ID, null, DATA, function(err, token){
-            cipherToken.getTokenSet(settings, token, checkTokenSet);
+            cipherToken.getTokenSet(settings, token, function(err, tokenSet){
+                assert.equal(err, null);
+                assert.notEqual(tokenSet, null);
+                assert.equal(tokenSet.userId, USER_ID);
+                assert.deepEqual(tokenSet.data, DATA);
+            });
         });
-        function checkTokenSet(err, tokenSet){
-            assert.notEqual(tokenSet, null);
-            assert.equal(tokenSet.userId, USER_ID);
-            assert.deepEqual(tokenSet.data, DATA);
-        }
     });
 
     it('Should return an expiresAtTimestamp', function () {
         cipherToken.createToken(settings, USER_ID, null, DATA, function(err, token){
-            cipherToken.getTokenSet(settings, token, checkTokenSet);
+            cipherToken.getTokenSet(settings, token, function(err, tokenSet){
+                assert.notEqual(tokenSet.expiresAtTimestamp, null);
+            });
         });
-        function checkTokenSet(err, tokenSet){
-            assert.notEqual(tokenSet.expiresAtTimestamp, null);
-        }
     });
 
     it('ExpiresInTimestamp should be greater than actual time according to settings', function () {
@@ -56,15 +55,16 @@ describe('Token generation', function() {
             tokenExpirationMinutes : 2
         };
         cipherToken.createToken(customSettings, USER_ID, null, DATA, function(err, token) {
-            cipherToken.getTokenSet(customSettings, token, checkTokenSet);
-        });
-        function checkTokenSet(err, tokenSet){
-            var expected = new Date().getTime() + customSettings.tokenExpirationMinutes*60*1000;
-            var expectedRounded = (expected/(60*1000)).toFixed();
-            var actualRounded = (tokenSet.expiresAtTimestamp/(60*1000)).toFixed();
+            cipherToken.getTokenSet(customSettings, token, function(err, tokenSet){
+                assert.equal(err, null);
+                var expected = new Date().getTime() + customSettings.tokenExpirationMinutes*60*1000;
+                var expectedRounded = (expected/(60*1000)).toFixed();
+                var actualRounded = (tokenSet.expiresAtTimestamp/(60*1000)).toFixed();
 
-            assert.equal(expectedRounded, actualRounded);
-        }
+                assert.equal(expectedRounded, actualRounded);
+            });
+        });
+
     });
 });
 
@@ -72,23 +72,21 @@ describe('Error description', function () {
 
     it('Should return an error when submitted token is invalid', function() {
         var token = 'invalid token';
-        cipherToken.getTokenSet(settings, token, checkTokenSet);
-        function checkTokenSet(err, tokenSet) {
+        cipherToken.getTokenSet(settings, token, function(err, tokenSet) {
             assert.equal(tokenSet, null);
             assert.notEqual(err, null);
             assert.strictEqual(err.err, 'Bad token');
-        }
+        });
     });
 
     it('Should return an error when trying to decode with invalid firm key', function() {
         cipherToken.createToken(settings, USER_ID, null, DATA, function(err, token){
-            cipherToken.getTokenSet(anotherSettings, token, checkTokenSet);
+            cipherToken.getTokenSet(anotherSettings, token, function(err, tokenSet){
+                assert.equal(tokenSet, null);
+                assert.notEqual(err, null);
+                assert.strictEqual(err.err, 'Bad firm');
+            });
         });
-        function checkTokenSet(err, tokenSet){
-            assert.equal(tokenSet, null);
-            assert.notEqual(err, null);
-            assert.strictEqual(err.err, 'Bad firm');
-        }
     });
 
     it('Should return an error when trying to create a token with empty settings', function () {
@@ -124,21 +122,19 @@ describe('SessionId support', function() {
     it('Token should have a sessionId when enabled', function() {
 
         cipherToken.createToken(settingsWithSessionId, USER_ID, null, DATA, function(err, token){
-            cipherToken.getTokenSet(settingsWithSessionId, token, checkTokenSet);
+            cipherToken.getTokenSet(settingsWithSessionId, token, function(err, tokenSet){
+                assert.notEqual(tokenSet.sessionId, null);
+            });
         });
-        function checkTokenSet(err, tokenSet){
-            assert.notEqual(tokenSet.sessionId, null);
-        }
     });
 
 
     it('By default, token creation do not include session ids', function () {
         cipherToken.createToken(settings, USER_ID, null, DATA, function(err, token){
-            cipherToken.getTokenSet(settings, token, checkTokenSet);
+            cipherToken.getTokenSet(settings, token, function(err, tokenSet){
+                assert.equal(tokenSet.sessionId, null);
+            });
         });
-        function checkTokenSet(err, tokenSet){
-            assert.equal(tokenSet.sessionId, null);
-        }
     });
 
     it('Session ids should be different for different tokens', function() {
@@ -162,11 +158,10 @@ describe('SessionId support', function() {
     it('New token can be created with a given sessionId', function(){
         var sessionId = 'abc123456';
         cipherToken.createToken(settingsWithSessionId, USER_ID, sessionId, DATA, function(err, token){
-            cipherToken.getTokenSet(settingsWithSessionId, token, checkTokenSet);
+            cipherToken.getTokenSet(settingsWithSessionId, token, function(err, tokenSet){
+                assert.equal(err, null);
+                assert.equal(tokenSet.sessionId, sessionId)
+            });
         });
-        function checkTokenSet(err, tokenSet){
-            assert.equal(err, null);
-            assert.equal(tokenSet.sessionId, sessionId)
-        }
     });
 });
