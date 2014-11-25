@@ -62,19 +62,23 @@ function isEmpty(obj) {
 }
 
 function serialize(data, cbk) {
+    var res;
     try {
-        cbk(null, JSON.stringify(data));
+        res = JSON.stringify(data);
     } catch (e) {
-        cbk(ERRORS.serializationError);
+        return cbk(ERRORS.serializationError);
     }
+    cbk(null, res);
 }
 
 function unserialize(data, cbk) {
+    var res;
     try {
-        cbk(null, JSON.parse(data));
+        res = JSON.parse(data);
     } catch (e) {
-        cbk(ERRORS.unserializationError);
+        return cbk(ERRORS.unserializationError);
     }
+    cbk(null,res);
 }
 
 function standarizeToken(token){

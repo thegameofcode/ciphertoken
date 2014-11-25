@@ -1,6 +1,6 @@
 {
   "name": "ciphertoken",
-  "version": "0.0.4",
+  "version": "0.9.5",
   "description": "Ciphered accessToken management",
   "main": "cipherToken.js",
   "scripts": {
