@@ -174,7 +174,7 @@ function createToken(settings, userId, sessionId, data, cbk) {
     });
 }
 
-function getTokenSet(settings, cipheredToken, cbk){
+function decodeToken(settings, cipheredToken, cbk){
     enrichSettings(settings, function(err, settings){
         if (err) {
             return cbk(err, null);
@@ -211,8 +211,10 @@ function getTokenSet(settings, cipheredToken, cbk){
 }
 
 module.exports = {
-    createToken: createToken,
-    getTokenSet: getTokenSet
+    encode: createToken,
+    decode: decodeToken,
+    getTokenSet: decodeToken,
+    createToken: createToken
 };
 
 // TODO: Use jwt instead of crypto for token encoding
