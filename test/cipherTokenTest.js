@@ -15,13 +15,17 @@ var settingsWithSessionId = {
     enableSessionId: true
 };
 
-var anotherSettings = {
+var settingsWithDifferentFirmKey = {
     cipherKey: 'myCipherKey123',
     firmKey: 'anotherFirmKey'
 };
 
-describe('Token generation', function() {
+var settingsWithDifferentCipherKey = {
+    cipherKey: 'anotherCipherKey123',
+    firmKey:  'myFirmKey123'
+};
 
+describe('Token generation', function() {
     it('Should generate tokens', function() {
         cipherToken.encode(settings, USER_ID, null, DATA, function(err, token){
             assert.equal(err, null);
@@ -80,10 +84,10 @@ describe('Error description', function () {
 
     it('Should return an error when trying to decode with invalid firm key', function() {
         cipherToken.encode(settings, USER_ID, null, DATA, function(err, token){
-            cipherToken.decode(anotherSettings, token, function(err, tokenSet){
+            cipherToken.decode(settingsWithDifferentFirmKey, token, function(err, tokenSet){
                 assert.equal(tokenSet, null);
                 assert.notEqual(err, null);
-                assert.strictEqual(err.err, 'Bad firm');
+                assert.strictEqual(err.err, 'Bad credentials');
             });
         });
     });
@@ -113,6 +117,16 @@ describe('Error description', function () {
         cipherToken.encode({'cipherKey': 'cipherKey1234'}, USER_ID, null, DATA, function(err){
             assert.notEqual(err, null);
             assert.strictEqual(err.err, 'FirmKey required');
+        });
+    });
+
+    it('Should return an error when trying to decode with incorrect settings', function(){
+        cipherToken.encode(settings, USER_ID, null, DATA, function(err, token){
+            cipherToken.decode(settingsWithDifferentCipherKey, token, function(err, tokenSet){
+                assert.equal(tokenSet, null);
+                assert.notEqual(err, null);
+                assert.strictEqual(err.err, 'Bad credentials');
+            });
         });
     });
 });
@@ -159,34 +173,6 @@ describe('SessionId support', function() {
             cipherToken.decode(settingsWithSessionId, token, function(err, tokenSet){
                 assert.equal(err, null);
                 assert.equal(tokenSet.sessionId, sessionId)
-            });
-        });
-    });
-});
-
-describe('Refresh tokens', function(){
-    it('Should generate refresh tokens out of an access token', function(){
-        var accessTokenSettings = {
-            cipherKey: "5yR5qUfZyYjBwQB4",
-            firmKey: "2MAkk4PaSmqKaYaM",
-            tokenExpirationMinutes: 1
-            //enableSessionId: true
-        };
-
-        var refreshTokenSettings = {
-            cipherKey: "wKr8KhjfKF7Vez8R",
-            firmKey: "9PXhsADXkfD4mPz4",
-            tokenExpirationMinutes: 43200
-        };
-
-        var crashToken = "eDH7aAyWFi0aLGdo-igO3ENZrOMhAHNcMn_zDcpedlW3Uk0hzrFxDFgp9O33X32ZwIPlqOAmpYy-U662ChYYPEDsnsBPhM18IzyJVHBi-XWuLfHoINfMGBkF2w8KHVq-3gkfdDFCJJKRTaIsgsDNt49OXsaGdEMdb9XzLliVMfc";
-
-        cipherToken.decode(refreshTokenSettings, crashToken, function(err, tokenSet){
-            assert.equal(err, null);
-            console.log(tokenSet);
-            cipherToken.encode(accessTokenSettings, tokenSet.userId, null, tokenSet.data, function(err, token){
-                assert.equal(err, null);
-                console.log(token);
             });
         });
     });

@@ -13,9 +13,9 @@ var ERRORS = {
         err: 'FirmKey required',
         des: 'FirmKey parameter is mandatory'
     },
-    badFirm: {
-        err: 'Bad firm',
-        des: 'Firm is not valid'
+    badCredentials: {
+        err: 'Bad credentials',
+        des: 'Credentials are not valid'
     },
     badToken: {
         err: 'Bad token',
@@ -124,7 +124,13 @@ function decipherToken(settings, cipheredToken, cbk){
     if (!decodedToken){
         return cbk(ERRORS.badToken, null);
     }
-    decodedToken = (decodedToken + decipher.final(settings.plainEncoding));
+
+    try{
+        decodedToken = (decodedToken + decipher.final(settings.plainEncoding));
+    }catch (err) {
+        return cbk(null, ERRORS.badCredentials)
+    }
+
 
     unserialize(decodedToken, function(err, decodedToken){
         if(err){
@@ -191,7 +197,7 @@ function decodeToken(settings, cipheredToken, cbk){
                 }
 
                 if(!isValid) {
-                    return cbk(ERRORS.badFirm, null);
+                    return cbk(ERRORS.badCredentials, null);
                 }
 
                 var tokenSet = {
