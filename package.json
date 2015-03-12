@@ -1,17 +1,30 @@
 {
   "name": "ciphertoken",
-  "version": "0.0.5",
+  "version": "0.9.5",
   "description": "Ciphered accessToken management",
-  "main": "src/ciphertoken.js",
+  "main": "cipherToken.js",
   "scripts": {
-    "test": "DEBUG=ciphertoken* mocha src/test/*",
-    "perf": "DEBUG=ciphertoken* node src/perf/*"
+    "test": "mocha test/*"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/IGZjonasdacruz/ciphertoken.git"
   },
   "author": "Jonas Da Cruz",
+  "contributors": [
+    {
+      "name": "Kristina Zabunova",
+      "email": "triara.xiii@gmail.com"
+    },
+    {
+      "name": "Luis Mesas"
+    },
+    {
+      "name": "Angel Sanchez",
+      "email": "angelsanchezroa@gmail.com",
+      "url": "https://github.com/angelsanchez"
+    }
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/IGZjonasdacruz/ciphertoken/issues"
@@ -21,7 +34,7 @@
     "debug": "~0.7.4"
   },
   "devDependencies": {
-    "mocha": "~1.17.1"
+    "mocha": "^2.0.1"
   },
   "engines": {
     "node": ">=0.10.26"
